@@ -1,0 +1,63 @@
+{
+  "dateFolders": "month",
+  "screenshotTodayAlias": true,
+  "autoBundle": true,
+  "weeklySweep": {
+    "enabled": true,
+    "weekday": "Sun",
+    "hour": 21,
+    "archiveAfterDays": 30
+  },
+  "pinnedRules": [
+    {"contains": ["invoice", "receipt"], "dest": "Docs"},
+    {"prefix": ["SOW_", "Proposal_"], "dest": "Docs"}
+  ],
+  "extensions": {
+    "pdf": "PDFs",
+    "png": "Images",
+    "jpg": "Images",
+    "jpeg": "Images",
+    "heic": "Images",
+    "gif": "Images",
+    "zip": "Archives",
+    "7z": "Archives",
+    "rar": "Archives",
+    "tar": "Archives",
+    "gz": "Archives",
+    "ppt": "Slides",
+    "pptx": "Slides",
+    "key": "Slides",
+    "xls": "Sheets",
+    "xlsx": "Sheets",
+    "csv": "Sheets",
+    "doc": "Docs",
+    "docx": "Docs",
+    "md": "Docs",
+    "rtf": "Docs",
+    "txt": "Docs",
+    "mp4": "Video",
+    "mov": "Video",
+    "avi": "Video",
+    "mkv": "Video",
+    "mp3": "Audio",
+    "wav": "Audio",
+    "flac": "Audio",
+    "aac": "Audio",
+    "app": "Apps",
+    "dmg": "Apps"
+  },
+  "categories": {
+    "Screenshots": "📸",
+    "Images": "🖼️",
+    "PDFs": "📄",
+    "Docs": "📝",
+    "Slides": "📊",
+    "Sheets": "📈",
+    "Archives": "📦",
+    "Video": "🎥",
+    "Audio": "🎵",
+    "Apps": "📱",
+    "Projects": "💻",
+    "Misc": "📁"
+  }
+}

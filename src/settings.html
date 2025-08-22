@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TidyTop Settings</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            margin: 0 0 20px 0;
+            font-size: 24px;
+            color: #2563EB;
+        }
+        
+        .section {
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e5e5e5;
+        }
+        
+        .section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        
+        .section h3 {
+            margin: 0 0 12px 0;
+            font-size: 16px;
+            color: #333;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        
+        select, input[type="text"] {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            background: white;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+        
+        .rule-item {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .rule-inputs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .rule-inputs input {
+            flex: 1;
+        }
+        
+        .rule-inputs select {
+            min-width: 120px;
+        }
+        
+        .btn {
+            background: #2563EB;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .btn:hover {
+            background: #1d4ed8;
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+        }
+        
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+        
+        .btn-small {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e5e5;
+        }
+        
+        .emoji {
+            font-size: 16px;
+            margin-right: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><span class="emoji">⚙️</span>TidyTop Settings</h1>
+        
+        <div class="section">
+            <h3>Organization Settings</h3>
+            
+            <div class="form-group">
+                <label for="dateFolders">Date Folder Format:</label>
+                <select id="dateFolders">
+                    <option value="month">Month (2025-08)</option>
+                    <option value="day">Day (2025-08-20)</option>
+                    <option value="year">Year (2025)</option>
+                </select>
+            </div>
+            
+            <div class="checkbox-group">
+                <input type="checkbox" id="screenshotTodayAlias">
+                <label for="screenshotTodayAlias">Create "Today" folder for recent screenshots</label>
+            </div>
+            
+            <div class="checkbox-group">
+                <input type="checkbox" id="autoBundle">
+                <label for="autoBundle">Auto-bundle burst screenshots</label>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h3>Custom Rules</h3>
+            <p style="margin-bottom: 12px; color: #666;">Add custom rules to organize files with specific names or patterns.</p>
+            
+            <div id="rulesContainer">
+                <!-- Rules will be dynamically added here -->
+            </div>
+            
+            <button class="btn btn-secondary btn-small" onclick="addRule()">+ Add Rule</button>
+        </div>
+        
+        <div class="section">
+            <h3>File Extensions</h3>
+            <p style="margin-bottom: 12px; color: #666;">Customize which file types go to which categories.</p>
+            
+            <div class="form-group">
+                <label for="newExtension">Add Extension:</label>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="newExtension" placeholder="pdf">
+                    <select id="newCategory">
+                        <option value="PDFs">PDFs</option>
+                        <option value="Images">Images</option>
+                        <option value="Docs">Docs</option>
+                        <option value="Slides">Slides</option>
+                        <option value="Sheets">Sheets</option>
+                        <option value="Archives">Archives</option>
+                        <option value="Video">Video</option>
+                        <option value="Audio">Audio</option>
+                        <option value="Apps">Apps</option>
+                        <option value="Misc">Misc</option>
+                    </select>
+                    <button class="btn btn-secondary btn-small" onclick="addExtension()">Add</button>
+                </div>
+            </div>
+            
+            <div id="extensionsContainer">
+                <!-- Extensions will be shown here -->
+            </div>
+        </div>
+        
+        <div class="actions">
+            <button class="btn btn-secondary" onclick="resetToDefaults()">Reset to Defaults</button>
+            <button class="btn" onclick="saveSettings()">Save Settings</button>
+        </div>
+    </div>
+
+    <script>
+        let config = {};
+        
+        // Load current configuration
+        async function loadConfig() {
+            try {
+                config = await window.electronAPI.getConfig();
+                updateUI();
+            } catch (error) {
+                console.error('Failed to load config:', error);
+            }
+        }
+        
+        function updateUI() {
+            document.getElementById('dateFolders').value = config.dateFolders || 'month';
+            document.getElementById('screenshotTodayAlias').checked = config.screenshotTodayAlias !== false;
+            document.getElementById('autoBundle').checked = config.autoBundle !== false;
+            
+            renderRules();
+            renderExtensions();
+        }
+        
+        function renderRules() {
+            const container = document.getElementById('rulesContainer');
+            container.innerHTML = '';
+            
+            (config.pinnedRules || []).forEach((rule, index) => {
+                const ruleDiv = document.createElement('div');
+                ruleDiv.className = 'rule-item';
+                ruleDiv.innerHTML = `
+                    <div class="rule-inputs">
+                        <input type="text" placeholder="Contains (comma-separated)" 
+                               value="${(rule.contains || []).join(', ')}" 
+                               onchange="updateRule(${index}, 'contains', this.value)">
+                        <input type="text" placeholder="Starts with (comma-separated)" 
+                               value="${(rule.prefix || []).join(', ')}" 
+                               onchange="updateRule(${index}, 'prefix', this.value)">
+                        <select onchange="updateRule(${index}, 'dest', this.value)">
+                            <option value="PDFs" ${rule.dest === 'PDFs' ? 'selected' : ''}>PDFs</option>
+                            <option value="Images" ${rule.dest === 'Images' ? 'selected' : ''}>Images</option>
+                            <option value="Docs" ${rule.dest === 'Docs' ? 'selected' : ''}>Docs</option>
+                            <option value="Slides" ${rule.dest === 'Slides' ? 'selected' : ''}>Slides</option>
+                            <option value="Sheets" ${rule.dest === 'Sheets' ? 'selected' : ''}>Sheets</option>
+                            <option value="Archives" ${rule.dest === 'Archives' ? 'selected' : ''}>Archives</option>
+                            <option value="Video" ${rule.dest === 'Video' ? 'selected' : ''}>Video</option>
+                            <option value="Audio" ${rule.dest === 'Audio' ? 'selected' : ''}>Audio</option>
+                            <option value="Apps" ${rule.dest === 'Apps' ? 'selected' : ''}>Apps</option>
+                            <option value="Misc" ${rule.dest === 'Misc' ? 'selected' : ''}>Misc</option>
+                        </select>
+                        <button class="btn btn-secondary btn-small" onclick="removeRule(${index})">Remove</button>
+                    </div>
+                `;
+                container.appendChild(ruleDiv);
+            });
+        }
+        
+        function renderExtensions() {
+            const container = document.getElementById('extensionsContainer');
+            container.innerHTML = '';
+            
+            if (config.extensions) {
+                Object.entries(config.extensions).forEach(([ext, category]) => {
+                    const extDiv = document.createElement('div');
+                    extDiv.style.cssText = 'display: flex; align-items: center; gap: 8px; margin-bottom: 4px; padding: 4px 8px; background: #f8f9fa; border-radius: 4px;';
+                    extDiv.innerHTML = `
+                        <span style="font-family: monospace; background: #e9ecef; padding: 2px 6px; border-radius: 3px;">.${ext}</span>
+                        <span>→</span>
+                        <span>${category}</span>
+                        <button class="btn btn-secondary btn-small" onclick="removeExtension('${ext}')">Remove</button>
+                    `;
+                    container.appendChild(extDiv);
+                });
+            }
+        }
+        
+        function addRule() {
+            if (!config.pinnedRules) config.pinnedRules = [];
+            config.pinnedRules.push({ contains: [], prefix: [], dest: 'Docs' });
+            renderRules();
+        }
+        
+        function removeRule(index) {
+            config.pinnedRules.splice(index, 1);
+            renderRules();
+        }
+        
+        function updateRule(index, field, value) {
+            const rule = config.pinnedRules[index];
+            if (field === 'contains' || field === 'prefix') {
+                rule[field] = value.split(',').map(s => s.trim()).filter(s => s);
+            } else {
+                rule[field] = value;
+            }
+        }
+        
+        function addExtension() {
+            const ext = document.getElementById('newExtension').value.trim().toLowerCase();
+            const category = document.getElementById('newCategory').value;
+            
+            if (ext) {
+                if (!config.extensions) config.extensions = {};
+                config.extensions[ext] = category;
+                document.getElementById('newExtension').value = '';
+                renderExtensions();
+            }
+        }
+        
+        function removeExtension(ext) {
+            delete config.extensions[ext];
+            renderExtensions();
+        }
+        
+        function resetToDefaults() {
+            if (confirm('Reset all settings to defaults? This cannot be undone.')) {
+                window.electronAPI.resetConfig();
+                loadConfig();
+            }
+        }
+        
+        function saveSettings() {
+            // Update config from form
+            config.dateFolders = document.getElementById('dateFolders').value;
+            config.screenshotTodayAlias = document.getElementById('screenshotTodayAlias').checked;
+            config.autoBundle = document.getElementById('autoBundle').checked;
+            
+            window.electronAPI.saveConfig(config);
+            window.close();
+        }
+        
+        // Load config when page loads
+        loadConfig();
+    </script>
+</body>
+</html>
