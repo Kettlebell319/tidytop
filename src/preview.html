@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TidyTop Preview</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .header {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            margin: 0 0 10px 0;
+            color: #2563EB;
+            font-size: 24px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .stat-card {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 12px;
+            text-align: center;
+            border-left: 4px solid #2563EB;
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2563EB;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .section h3 {
+            margin: 0 0 15px 0;
+            color: #333;
+            font-size: 18px;
+        }
+        
+        .category {
+            margin-bottom: 20px;
+        }
+        
+        .category-header {
+            background: #2563EB;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        
+        .file-list {
+            max-height: 150px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            border-radius: 4px;
+            padding: 8px;
+        }
+        
+        .file-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 8px;
+            margin: 2px 0;
+            background: white;
+            border-radius: 3px;
+            font-size: 13px;
+        }
+        
+        .file-icon {
+            font-size: 16px;
+        }
+        
+        .file-name {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .file-type {
+            font-size: 11px;
+            color: #666;
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 2px;
+        }
+        
+        .skip-section .file-item {
+            background: #fff3cd;
+            border-left: 3px solid #ffc107;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .btn {
+            background: #2563EB;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .btn:hover {
+            background: #1d4ed8;
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+        }
+        
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+        
+        .empty-state {
+            text-align: center;
+            color: #666;
+            padding: 40px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔍 TidyTop Organization Preview</h1>
+        <p>Here's what will happen when you organize your desktop:</p>
+        
+        <div class="stats" id="stats">
+            <!-- Stats will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <div class="section" id="organize-section">
+        <h3>✨ Files to Organize</h3>
+        <div id="categories">
+            <!-- Categories will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <div class="section skip-section" id="skip-section" style="display: none;">
+        <h3>⏭️ Files to Skip</h3>
+        <div id="skipped-files">
+            <!-- Skipped files will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <div class="actions">
+        <button class="btn" onclick="organizeNow()">🧹 Organize Now</button>
+        <button class="btn btn-secondary" onclick="closePreview()">Cancel</button>
+    </div>
+
+    <script>
+        let previewData = null;
+
+        // Listen for preview data from main process
+        window.electronAPI.onPreviewData((data) => {
+            previewData = data;
+            renderPreview(data);
+        });
+
+        function renderPreview(data) {
+            renderStats(data.stats);
+            renderCategories(data.categories, data.willOrganize);
+            renderSkippedFiles(data.willSkip);
+        }
+
+        function renderStats(stats) {
+            const statsContainer = document.getElementById('stats');
+            statsContainer.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-number">${stats.totalFiles}</div>
+                    <div class="stat-label">Total Files</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${stats.willOrganizeCount}</div>
+                    <div class="stat-label">Will Organize</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${stats.categoriesCount}</div>
+                    <div class="stat-label">Categories</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${stats.willSkipCount}</div>
+                    <div class="stat-label">Will Skip</div>
+                </div>
+            `;
+        }
+
+        function renderCategories(categories, allFiles) {
+            const container = document.getElementById('categories');
+            
+            if (Object.keys(categories).length === 0) {
+                container.innerHTML = '<div class="empty-state">No files to organize</div>';
+                return;
+            }
+
+            container.innerHTML = '';
+            
+            Object.entries(categories).forEach(([category, files]) => {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'category';
+                
+                const filesInCategory = allFiles.filter(file => file.destinationCategory === category);
+                
+                categoryDiv.innerHTML = `
+                    <div class="category-header">${category} (${files.length} files)</div>
+                    <div class="file-list">
+                        ${filesInCategory.map(file => `
+                            <div class="file-item">
+                                <span class="file-icon">${getFileIcon(file.type, file.isScreenshot)}</span>
+                                <span class="file-name">${file.name}</span>
+                                <span class="file-type">${file.type}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                
+                container.appendChild(categoryDiv);
+            });
+        }
+
+        function renderSkippedFiles(skippedFiles) {
+            const section = document.getElementById('skip-section');
+            const container = document.getElementById('skipped-files');
+            
+            if (skippedFiles.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+            
+            section.style.display = 'block';
+            
+            container.innerHTML = `
+                <div class="file-list">
+                    ${skippedFiles.map(file => `
+                        <div class="file-item">
+                            <span class="file-icon">${getFileIcon(file.type)}</span>
+                            <span class="file-name">${file.name}</span>
+                            <span class="file-type">${file.reason}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function getFileIcon(type, isScreenshot = false) {
+            if (isScreenshot) return '📸';
+            if (type === 'folder') return '📁';
+            return '📄';
+        }
+
+        function organizeNow() {
+            window.electronAPI.organizeNow();
+            window.close();
+        }
+
+        function closePreview() {
+            window.close();
+        }
+    </script>
+</body>
+</html>

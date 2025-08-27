@@ -447,6 +447,94 @@ class DesktopOrganizer {
       console.error('Failed to save move log:', error);
     }
   }
+
+  async previewClean() {
+    console.log('🔍 Analyzing desktop files for preview...');
+    
+    try {
+      const files = await this.getDesktopFiles();
+      const preview = {
+        totalFiles: files.length,
+        willOrganize: [],
+        willSkip: [],
+        categories: {}
+      };
+
+      for (const file of files) {
+        try {
+          // Simulate organization without actually moving files
+          if (file.isDirectory) {
+            const category = this.determineFolderCategory(file);
+            if (category) {
+              preview.willOrganize.push({
+                name: file.name,
+                currentPath: file.path,
+                destinationCategory: category,
+                type: 'folder',
+                size: file.stats.size,
+                created: file.created
+              });
+              
+              if (!preview.categories[category]) {
+                preview.categories[category] = [];
+              }
+              preview.categories[category].push(file.name);
+            } else {
+              preview.willSkip.push({
+                name: file.name,
+                reason: 'System or organized folder',
+                type: 'folder'
+              });
+            }
+          } else {
+            const category = this.determineCategory(file);
+            if (category) {
+              preview.willOrganize.push({
+                name: file.name,
+                currentPath: file.path,
+                destinationCategory: category,
+                type: 'file',
+                size: file.stats.size,
+                created: file.created,
+                isScreenshot: this.isScreenshot(file)
+              });
+              
+              if (!preview.categories[category]) {
+                preview.categories[category] = [];
+              }
+              preview.categories[category].push(file.name);
+            } else {
+              preview.willSkip.push({
+                name: file.name,
+                reason: 'Unknown file type',
+                type: 'file'
+              });
+            }
+          }
+        } catch (error) {
+          console.error(`Error previewing ${file.name}:`, error);
+          preview.willSkip.push({
+            name: file.name,
+            reason: 'Error analyzing file',
+            type: file.isDirectory ? 'folder' : 'file'
+          });
+        }
+      }
+
+      // Add summary statistics
+      preview.stats = {
+        totalFiles: files.length,
+        willOrganizeCount: preview.willOrganize.length,
+        willSkipCount: preview.willSkip.length,
+        categoriesCount: Object.keys(preview.categories).length
+      };
+
+      return preview;
+    } catch (error) {
+      console.error('Preview analysis failed:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = { DesktopOrganizer };

@@ -1,22 +1,34 @@
 const { app, BrowserWindow, Menu, Tray, nativeImage, ipcMain } = require('electron');
 const path = require('path');
 const os = require('os');
+const AutoLaunch = require('auto-launch');
 
 class TidyTop {
   constructor() {
     this.tray = null;
     this.window = null;
     this.settingsWindow = null;
+    this.aboutWindow = null;
+    this.previewWindow = null;
     this.isQuitting = false;
     this.autoCleanEnabled = false;
+    this.autoLaunchEnabled = false;
     this.fileWatcher = null;
     this.config = null;
+    
+    // Auto-launch configuration
+    this.autoLauncher = new AutoLaunch({
+      name: 'TidyTop',
+      path: app.getPath('exe'),
+      isHidden: true // Start minimized to system tray
+    });
   }
 
   async init() {
     await app.whenReady();
     this.loadConfig();
     this.setupIPC();
+    await this.setupAutoLaunch();
     this.createTray();
     this.setupMenu();
     
@@ -30,37 +42,68 @@ class TidyTop {
     // Create tray icon - try custom icon first, fallback to system icon
     let icon;
     try {
-      const iconPath = path.join(__dirname, '../assets/icons/tray-icon.png');
-      icon = nativeImage.createFromPath(iconPath);
-      
-      // If custom icon failed or is empty, use system icon
-      if (icon.isEmpty()) {
-        throw new Error('Custom icon not found');
+      // Try to load the proper 16x16 tray icon
+      if (process.platform === 'darwin') {
+        // On macOS, use Template icon for automatic dark/light mode adaptation
+        const templatePath = path.join(__dirname, '../assets/icons/tray-16x16Template.png');
+        icon = nativeImage.createFromPath(templatePath);
+        
+        if (icon.isEmpty()) {
+          // Fallback to regular icon
+          const iconPath = path.join(__dirname, '../assets/icons/tray-16x16.png');
+          icon = nativeImage.createFromPath(iconPath);
+        }
+        
+        // Mark as template for macOS theme adaptation
+        if (!icon.isEmpty()) {
+          icon.setTemplateImage(true);
+        }
+      } else {
+        // For Windows/Linux, use regular icon
+        const iconPath = path.join(__dirname, '../assets/icons/tray-16x16.png');
+        icon = nativeImage.createFromPath(iconPath);
       }
       
-      // Resize for menu bar
-      icon = icon.resize({ width: 16, height: 16 });
+      // If all custom icons failed, use system fallback
+      if (icon.isEmpty()) {
+        throw new Error('Custom tray icons not found');
+      }
+      
     } catch (error) {
-      console.log('Using system icon:', error.message);
-      // Fallback to system icon - different for each platform
+      console.log('Using system fallback icon:', error.message);
+      
+      // Platform-specific system fallbacks
       if (process.platform === 'darwin') {
+        // Use a simple, small folder icon on macOS - much smaller and cleaner
         icon = nativeImage.createFromNamedImage('NSImageNameFolder', [16, 16]);
+        
+        // Make it even smaller for menu bar
+        icon = icon.resize({ width: 14, height: 14 });
+        icon.setTemplateImage(true);
+      } else if (process.platform === 'win32') {
+        // Create a simple geometric icon for Windows
+        icon = nativeImage.createFromDataURL('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAAdgAAAHYBTnsmCAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAE4SURBVDiNpZMxSwJxFIe/ryYRDpewobGhqaGloaWloam1oaGltaWltaGloaGloaGloaWhoaGloaGloaGloaGloaGloaGlpaGloaGloaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGh');
       } else {
-        // For Windows/Linux, create a simple text-based icon
-        icon = nativeImage.createFromDataURL('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAAdgAAAHYBTnsmCAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAFkSURBVDiNpZM9SwNBEIafJQQLwcJC0sZCG1sLG1sLbWwsLLSxsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGwsLGw');
+        // Linux fallback
+        icon = nativeImage.createFromDataURL('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAAdgAAAHYBTnsmCAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAE4SURBVDiNpZMxSwJxFIe/ryYRDpewobGhqaGloaWloam1oaGltaWltaGloaGloaGloaWhoaGloaGloaGloaGloaGloaGlpaGloaGloaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGh');
       }
     }
     
     this.tray = new Tray(icon);
     this.tray.setToolTip('TidyTop - Desktop Organizer');
     
-    // Add click handlers
+    // Add click handlers for better UX
     this.tray.on('click', () => {
-      console.log('Tray clicked');
+      console.log('Tray clicked - showing menu');
+      // On some platforms, left-click doesn't automatically show context menu
+      if (process.platform !== 'darwin') {
+        this.tray.popUpContextMenu();
+      }
     });
     
     this.tray.on('right-click', () => {
       console.log('Tray right-clicked');
+      this.tray.popUpContextMenu();
     });
   }
 
@@ -69,6 +112,10 @@ class TidyTop {
       {
         label: '🧹 Clean Now',
         click: () => this.cleanNow()
+      },
+      {
+        label: '👁️ Preview Clean',
+        click: () => this.previewClean()
       },
       {
         label: this.autoCleanEnabled ? '✨ Auto-Clean (ON)' : '✨ Auto-Clean (OFF)',
@@ -100,6 +147,12 @@ class TidyTop {
         click: () => this.showAbout()
       },
       {
+        label: this.autoLaunchEnabled ? 'Start at Login (ON)' : 'Start at Login (OFF)',
+        type: 'checkbox',
+        checked: this.autoLaunchEnabled,
+        click: (item) => this.toggleAutoLaunch(item.checked)
+      },
+      {
         label: 'Quit TidyTop',
         click: () => {
           this.isQuitting = true;
@@ -129,6 +182,59 @@ class TidyTop {
         content: 'Failed to clean desktop. Check console for details.'
       });
     }
+  }
+
+  async previewClean() {
+    console.log('🔍 Previewing desktop organization...');
+    
+    try {
+      const { DesktopOrganizer } = require('./core/organize/organizer');
+      const organizer = new DesktopOrganizer();
+      
+      // Get files that would be organized (without actually moving them)
+      const preview = await organizer.previewClean();
+      
+      this.showPreviewWindow(preview);
+      
+    } catch (error) {
+      console.error('Preview failed:', error);
+      this.tray.displayBalloon({
+        title: 'TidyTop Error',
+        content: 'Failed to preview organization. Check console for details.'
+      });
+    }
+  }
+
+  showPreviewWindow(preview) {
+    if (this.previewWindow) {
+      this.previewWindow.focus();
+      return;
+    }
+
+    this.previewWindow = new BrowserWindow({
+      width: 700,
+      height: 500,
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+        preload: path.join(__dirname, 'preview-preload.js')
+      },
+      resizable: true,
+      title: 'TidyTop Preview - What will be organized',
+      show: false
+    });
+
+    this.previewWindow.loadFile(path.join(__dirname, 'preview.html'));
+
+    this.previewWindow.once('ready-to-show', () => {
+      this.previewWindow.show();
+      // Send preview data to window
+      this.previewWindow.webContents.send('preview-data', preview);
+    });
+
+    this.previewWindow.on('closed', () => {
+      this.previewWindow = null;
+    });
   }
 
   toggleAutoClean(enabled) {
@@ -191,8 +297,20 @@ class TidyTop {
   }
 
   enterDesignMode() {
-    console.log('Entering design mode...');
-    // TODO: Implement design mode
+    console.log('Design Mode - Coming in Tier 1.5!');
+    
+    // Show a nice preview of what's coming
+    this.tray.displayBalloon({
+      title: '🎨 Design Mode - Coming Soon!',
+      content: 'Tier 1.5 will add playful desktop layouts: ❤️ Heart, ⭐️ Star, 🌀 Spiral, 🟦 Grid arrangements!'
+    });
+    
+    // TODO: Implement in Tier 1.5:
+    // - Heart, Star, Spiral, Grid layouts
+    // - SVG shape coordinates → desktop grid mapping
+    // - Emoji filler folders for empty spots
+    // - Auto-exit after 10 minutes
+    // - One-click return to organized state
   }
 
   openSettings() {
@@ -253,6 +371,10 @@ class TidyTop {
       }
     });
 
+    ipcMain.on('organize-now', () => {
+      this.cleanNow();
+    });
+
     ipcMain.handle('reset-config', () => {
       try {
         const defaultConfig = {
@@ -299,9 +421,75 @@ class TidyTop {
   }
 
   showAbout() {
-    this.tray.displayBalloon({
+    // Create a proper About window
+    if (this.aboutWindow) {
+      this.aboutWindow.focus();
+      return;
+    }
+
+    this.aboutWindow = new BrowserWindow({
+      width: 400,
+      height: 300,
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true
+      },
+      resizable: false,
+      minimizable: false,
+      maximizable: false,
       title: 'About TidyTop',
-      content: 'TidyTop v1.0 - Desktop organization made delightful! 🧹✨'
+      show: false
+    });
+
+    // Create About page content
+    const aboutHTML = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body { 
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                margin: 0; padding: 30px; text-align: center; background: #f5f5f5;
+            }
+            .logo { font-size: 48px; margin-bottom: 10px; }
+            .title { font-size: 24px; font-weight: bold; color: #2563EB; margin-bottom: 10px; }
+            .version { font-size: 16px; color: #666; margin-bottom: 20px; }
+            .description { font-size: 14px; color: #333; margin-bottom: 20px; line-height: 1.4; }
+            .features { text-align: left; max-width: 300px; margin: 0 auto; }
+            .feature { font-size: 12px; color: #555; margin: 4px 0; }
+            .footer { font-size: 11px; color: #888; margin-top: 20px; }
+        </style>
+    </head>
+    <body>
+        <div class="logo">🧹</div>
+        <div class="title">TidyTop</div>
+        <div class="version">Version 1.0.0</div>
+        <div class="description">A playful yet powerful desktop cleaning assistant that makes organization delightful!</div>
+        
+        <div class="features">
+            <div class="feature">🧹 One-click desktop organization</div>
+            <div class="feature">📸 Smart screenshot handling</div>
+            <div class="feature">✨ Auto-clean file watching</div>
+            <div class="feature">🕒 Recent files (72h) access</div>
+            <div class="feature">↩️ Complete undo system</div>
+            <div class="feature">⚙️ Customizable settings</div>
+        </div>
+        
+        <div class="footer">
+            Desktop organization made delightful! ✨<br>
+            Built with Electron & Node.js
+        </div>
+    </body>
+    </html>`;
+
+    this.aboutWindow.loadURL('data:text/html,' + encodeURIComponent(aboutHTML));
+
+    this.aboutWindow.once('ready-to-show', () => {
+      this.aboutWindow.show();
+    });
+
+    this.aboutWindow.on('closed', () => {
+      this.aboutWindow = null;
     });
   }
 
@@ -371,22 +559,80 @@ class TidyTop {
       console.error('Auto-organize failed:', error);
     }
   }
+
+  async setupAutoLaunch() {
+    try {
+      // Check if auto-launch is currently enabled
+      this.autoLaunchEnabled = await this.autoLauncher.isEnabled();
+      console.log(`Auto-launch is ${this.autoLaunchEnabled ? 'enabled' : 'disabled'}`);
+    } catch (error) {
+      console.error('Failed to check auto-launch status:', error);
+      this.autoLaunchEnabled = false;
+    }
+  }
+
+  async toggleAutoLaunch(enabled) {
+    try {
+      if (enabled) {
+        await this.autoLauncher.enable();
+        console.log('Auto-launch enabled');
+      } else {
+        await this.autoLauncher.disable();
+        console.log('Auto-launch disabled');
+      }
+      
+      this.autoLaunchEnabled = enabled;
+      
+      // Refresh menu to update status
+      this.setupMenu();
+      
+      this.tray.displayBalloon({
+        title: 'TidyTop',
+        content: `Start at login ${enabled ? 'enabled' : 'disabled'}`
+      });
+    } catch (error) {
+      console.error('Failed to toggle auto-launch:', error);
+      this.tray.displayBalloon({
+        title: 'TidyTop Error',
+        content: 'Failed to change startup settings'
+      });
+    }
+  }
 }
 
-// Handle app events
+// Handle app events for proper background operation
 app.on('window-all-closed', () => {
-  // Keep running in background
+  // On macOS, keep the app running in background even when all windows are closed
+  // On Windows/Linux, this is the expected behavior for system tray apps
+  if (process.platform !== 'darwin') {
+    // Keep running - don't quit
+  }
 });
 
 app.on('activate', () => {
-  // Re-create tray if needed
+  // On macOS, re-show the tray if it was hidden
+  if (tidyTop && !tidyTop.tray) {
+    tidyTop.createTray();
+    tidyTop.setupMenu();
+  }
 });
 
-app.on('before-quit', () => {
-  // Cleanup file watcher
+app.on('before-quit', (event) => {
+  if (tidyTop && !tidyTop.isQuitting) {
+    // Prevent quitting unless explicitly requested
+    event.preventDefault();
+    return;
+  }
+  
+  // Cleanup file watcher when actually quitting
   if (tidyTop && tidyTop.fileWatcher) {
     tidyTop.stopFileWatcher();
   }
+});
+
+// Prevent app from quitting when last window is closed (important for menu bar apps)
+app.on('quit', () => {
+  console.log('TidyTop shutting down...');
 });
 
 // Start the app
