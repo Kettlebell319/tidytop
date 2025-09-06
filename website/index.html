@@ -4,636 +4,526 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TidyTop - Desktop Organization Made Delightful</title>
-    <meta name="description" content="A playful yet powerful desktop cleaning assistant that automatically organizes your files into smart categories. Make your desktop beautiful with TidyTop!">
-    <meta name="keywords" content="desktop organizer, file organization, productivity, mac app, clean desktop, file management">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Rubik', 'system-ui', 'sans-serif'],
+                    },
+                    colors: {
+                        'background': 'oklch(0 0 0)',
+                        'foreground': 'oklch(1.0000 0 0)',
+                        'card': 'oklch(0.2455 0.0217 257.2823)',
+                        'card-foreground': 'oklch(1.0000 0 0)',
+                        'primary': 'oklch(0.6801 0.1583 276.9349)',
+                        'primary-foreground': 'oklch(0 0 0)',
+                        'secondary': 'oklch(0.7845 0.1325 181.9120)',
+                        'secondary-foreground': 'oklch(0 0 0)',
+                        'muted': 'oklch(0.3211 0 0)',
+                        'muted-foreground': 'oklch(0.8452 0 0)',
+                        'accent': 'oklch(0.8790 0.1534 91.6054)',
+                        'accent-foreground': 'oklch(0 0 0)',
+                        'border': 'oklch(0.4459 0 0)',
+                        'ring': 'oklch(0.6801 0.1583 276.9349)',
+                    },
+                    borderRadius: {
+                        'lg': '1rem',
+                        'xl': '1.25rem',
+                        '2xl': '1.5rem',
+                        '3xl': '2rem',
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --background: oklch(0 0 0);
+            --foreground: oklch(1.0000 0 0);
+            --card: oklch(0.2455 0.0217 257.2823);
+            --card-foreground: oklch(1.0000 0 0);
+            --primary: oklch(0.6801 0.1583 276.9349);
+            --primary-foreground: oklch(0 0 0);
+            --secondary: oklch(0.7845 0.1325 181.9120);
+            --secondary-foreground: oklch(0 0 0);
+            --muted: oklch(0.3211 0 0);
+            --muted-foreground: oklch(0.8452 0 0);
+            --accent: oklch(0.8790 0.1534 91.6054);
+            --accent-foreground: oklch(0 0 0);
+            --border: oklch(0.4459 0 0);
+            --ring: oklch(0.6801 0.1583 276.9349);
+            --font-sans: 'Rubik', sans-serif;
+            --radius: 1rem;
+            --shadow-sm: 0px 1px 2px -1px hsl(0 0% 100% / 0.05);
+            --shadow-md: 0px 2px 4px -1px hsl(0 0% 100% / 0.05);
+            --shadow-lg: 0px 4px 6px -1px hsl(0 0% 100% / 0.05);
+            --shadow-xl: 0px 8px 10px -1px hsl(0 0% 100% / 0.05);
+            --shadow-2xl: 0px 25px 50px -12px hsl(0 0% 100% / 0.15);
+            --tracking-normal: normal;
         }
         
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background: #ffffff;
+        body { 
+            font-family: var(--font-sans);
+            letter-spacing: var(--tracking-normal);
+            background-color: var(--background);
+            color: var(--foreground);
         }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-        
-        /* Header */
-        .header {
+        .glass-card {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 100;
-            border-bottom: 1px solid #e5e5e5;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
-        
-        .nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 0;
+        .drink-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
-        .logo {
-            font-size: 24px;
-            font-weight: 700;
-            color: #2563EB;
-            text-decoration: none;
+        .drink-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
         }
-        
-        .nav-links {
-            display: flex;
-            gap: 30px;
-            list-style: none;
-        }
-        
-        .nav-links a {
-            text-decoration: none;
-            color: #666;
-            font-weight: 500;
-            transition: color 0.2s;
-        }
-        
-        .nav-links a:hover {
-            color: #2563EB;
-        }
-        
-        .cta-btn {
-            background: #2563EB;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-        
-        .cta-btn:hover {
-            background: #1d4ed8;
-            transform: translateY(-2px);
-        }
-        
-        /* Hero Section */
-        .hero {
+        .hero-gradient {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 120px 0 80px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
+        }
+        .price-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
         }
         
-        .hero::before {
+        /* Highlighter Effects */
+        .highlight-yellow {
+            background: linear-gradient(120deg, var(--accent) 0%, var(--accent) 100%);
+            background-repeat: no-repeat;
+            background-size: 100% 0.3em;
+            background-position: 0 88%;
+            transition: background-size 0.25s ease-in;
+        }
+        
+        .highlight-purple {
+            background: linear-gradient(120deg, var(--primary) 0%, var(--primary) 100%);
+            background-repeat: no-repeat;
+            background-size: 100% 0.3em;
+            background-position: 0 88%;
+        }
+        
+        .highlight-teal {
+            background: linear-gradient(120deg, var(--secondary) 0%, var(--secondary) 100%);
+            background-repeat: no-repeat;
+            background-size: 100% 0.3em;
+            background-position: 0 88%;
+        }
+        
+        /* Underline Effects */
+        .underline-squiggly {
+            text-decoration: underline;
+            text-decoration-style: wavy;
+            text-decoration-color: var(--accent);
+            text-decoration-thickness: 2px;
+            text-underline-offset: 4px;
+        }
+        
+        .underline-double {
+            border-bottom: 3px double var(--primary);
+            padding-bottom: 2px;
+        }
+        
+        .underline-gradient {
+            position: relative;
+        }
+        .underline-gradient::after {
             content: '';
             position: absolute;
-            top: 0;
+            bottom: -2px;
             left: 0;
             right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100%" height="100%" fill="url(%23grain)"/></svg>');
-            opacity: 0.1;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+            border-radius: 2px;
         }
         
-        .hero-content {
+        /* Hand-drawn style underline */
+        .underline-hand-drawn {
             position: relative;
-            z-index: 2;
+        }
+        .underline-hand-drawn::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: -2px;
+            right: -2px;
+            height: 6px;
+            background: url("data:image/svg+xml,%3csvg width='100' height='20' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='m3,17c6,0,6-12,14-12,8,0,8,12,14,12,6,0,6-12,14-12,8,0,8,12,14,12,6,0,6-12,14-12,8,0,8,12,14-12,6,0,6,12,14,12' stroke='%23a78bfa' stroke-width='2' fill='none'/%3e%3c/svg%3e") repeat-x;
+            background-size: 20px 100%;
         }
         
-        .hero-icon {
-            font-size: 80px;
-            margin-bottom: 20px;
-            display: block;
+        /* Marker highlight effect */
+        .marker-highlight {
+            position: relative;
+            z-index: 1;
+        }
+        .marker-highlight::before {
+            content: '';
+            position: absolute;
+            top: 15%;
+            left: -4px;
+            right: -4px;
+            bottom: 15%;
+            background: var(--accent);
+            opacity: 0.3;
+            z-index: -1;
+            transform: rotate(-1deg);
+            border-radius: 4px;
         }
         
-        .hero h1 {
-            font-size: 3.5rem;
-            font-weight: 700;
-            margin-bottom: 20px;
-            line-height: 1.2;
+        /* Hand-written purple highlight */
+        .highlight-purple-custom {
+            position: relative;
+            z-index: 1;
+        }
+        .highlight-purple-custom::before {
+            content: '';
+            position: absolute;
+            top: 60%;
+            left: -4px;
+            right: -4px;
+            height: 12px;
+            background: var(--primary);
+            opacity: 0.3;
+            z-index: -1;
+            transform: rotate(-0.5deg) skew(-2deg);
+            border-radius: 8px 3px 5px 2px;
         }
         
-        .hero .subtitle {
-            font-size: 1.25rem;
+        /* Hand-drawn purple underline */
+        .underline-purple {
+            position: relative;
+            padding-bottom: 4px;
+        }
+        .underline-purple::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: -2px;
+            right: -2px;
+            height: 4px;
+            background: url("data:image/svg+xml,%3csvg width='200' height='8' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M2,6 Q25,2 50,4 T100,5 T150,3 T200,5' stroke='%236366f1' stroke-width='2' fill='none' stroke-linecap='round'/%3e%3c/svg%3e") repeat-x;
+            background-size: 50px 100%;
             opacity: 0.9;
-            margin-bottom: 40px;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
         }
         
-        .hero-buttons {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        
-        .btn-primary {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            padding: 15px 30px;
-            border-radius: 12px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 16px;
-            transition: all 0.3s;
-            backdrop-filter: blur(10px);
-        }
-        
-        .btn-primary:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
-        }
-        
-        .btn-secondary {
-            background: white;
-            color: #2563EB;
-            border: 2px solid white;
-            padding: 15px 30px;
-            border-radius: 12px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 16px;
-            transition: all 0.3s;
-        }
-        
-        .btn-secondary:hover {
-            background: #f8f9ff;
-            transform: translateY(-2px);
-        }
-        
-        /* Features Section */
-        .features {
-            padding: 80px 0;
-            background: #f8f9ff;
-        }
-        
-        .section-title {
-            text-align: center;
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: #2563EB;
-            margin-bottom: 60px;
-        }
-        
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 40px;
-        }
-        
-        .feature-card {
-            background: white;
-            padding: 40px;
-            border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            transition: transform 0.3s;
-        }
-        
-        .feature-card:hover {
-            transform: translateY(-10px);
-        }
-        
-        .feature-icon {
-            font-size: 48px;
-            margin-bottom: 20px;
-            display: block;
-        }
-        
-        .feature-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: #2563EB;
-            margin-bottom: 15px;
-        }
-        
-        .feature-description {
-            color: #666;
-            line-height: 1.6;
-        }
-        
-        /* How It Works */
-        .how-it-works {
-            padding: 80px 0;
-        }
-        
-        .steps {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 40px;
-            margin-top: 60px;
-        }
-        
-        .step {
-            text-align: center;
+        /* Hand-drawn circle effect */
+        .hand-circle {
             position: relative;
+            display: inline-block;
+            padding: 6px 12px;
         }
-        
-        .step-number {
-            background: #2563EB;
-            color: white;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            font-weight: 700;
-            margin: 0 auto 20px;
-        }
-        
-        .step-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin-bottom: 10px;
-            color: #2563EB;
-        }
-        
-        .step-description {
-            color: #666;
-        }
-        
-        /* Screenshots */
-        .screenshots {
-            padding: 80px 0;
-            background: #f8f9ff;
-        }
-        
-        .screenshot-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
-            margin-top: 40px;
-        }
-        
-        .screenshot {
-            background: white;
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
-        }
-        
-        .screenshot-placeholder {
-            background: linear-gradient(45deg, #f0f0f0, #e0e0e0);
-            border-radius: 8px;
-            height: 300px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #999;
-            font-size: 18px;
-            margin-bottom: 15px;
-        }
-        
-        .screenshot-title {
-            font-weight: 600;
-            color: #2563EB;
-            margin-bottom: 8px;
-        }
-        
-        .screenshot-desc {
-            color: #666;
-            font-size: 14px;
-        }
-        
-        /* Download Section */
-        .download {
-            padding: 80px 0;
-            text-align: center;
-        }
-        
-        .download-buttons {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            margin-top: 40px;
-            flex-wrap: wrap;
-        }
-        
-        .download-btn {
-            background: #2563EB;
-            color: white;
-            padding: 20px 40px;
-            border-radius: 12px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 18px;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .download-btn:hover {
-            background: #1d4ed8;
-            transform: translateY(-2px);
-        }
-        
-        .platform-info {
-            font-size: 14px;
-            color: #666;
-            margin-top: 20px;
-        }
-        
-        /* Footer */
-        .footer {
-            background: #333;
-            color: white;
-            padding: 40px 0;
-            text-align: center;
-        }
-        
-        .footer-links {
-            display: flex;
-            justify-content: center;
-            gap: 30px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-        
-        .footer-links a {
-            color: #ccc;
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-        
-        .footer-links a:hover {
-            color: white;
-        }
-        
-        .footer-copyright {
-            color: #999;
-            font-size: 14px;
-        }
-        
-        /* Responsive */
-        @media (max-width: 768px) {
-            .hero h1 {
-                font-size: 2.5rem;
-            }
-            
-            .hero .subtitle {
-                font-size: 1.1rem;
-            }
-            
-            .screenshot-container {
-                grid-template-columns: 1fr;
-            }
-            
-            .nav-links {
-                display: none;
-            }
+        .hand-circle::before {
+            content: '';
+            position: absolute;
+            top: -6px;
+            left: -10px;
+            right: -10px;
+            bottom: -6px;
+            border: 2px solid var(--primary);
+            border-radius: 60% 40% 45% 55% / 70% 30% 70% 30%;
+            transform: rotate(-1deg);
+            opacity: 0.8;
         }
     </style>
 </head>
-<body>
+<body class="bg-gray-50">
     <!-- Header -->
-    <header class="header">
-        <div class="container">
-            <nav class="nav">
-                <a href="#" class="logo">🧹 TidyTop</a>
-                <ul class="nav-links">
-                    <li><a href="#features">Features</a></li>
-                    <li><a href="#how-it-works">How It Works</a></li>
-                    <li><a href="#download">Download</a></li>
-                </ul>
-                <a href="#download" class="cta-btn">Get TidyTop</a>
+    <header class="fixed top-0 w-full glass-card z-50 border-b border-muted">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="text-xl font-bold text-primary flex items-center gap-2">
+                <span class="text-2xl">🧹</span>
+                TidyTop
+            </div>
+            <nav class="hidden md:flex space-x-8">
+                <a href="#features" class="text-muted-foreground hover:text-foreground transition-colors font-medium">Features</a>
+                <a href="#pricing" class="text-muted-foreground hover:text-foreground transition-colors font-medium">Pricing</a>
             </nav>
+            <button onclick="scrollToPricing()" class="bg-primary text-primary-foreground px-6 py-2.5 rounded-xl hover:opacity-90 transition-all font-semibold shadow-lg hover:shadow-xl transform hover:scale-105">
+                Get TidyTop
+            </button>
         </div>
     </header>
 
     <!-- Hero Section -->
-    <section class="hero">
-        <div class="container">
-            <div class="hero-content">
-                <span class="hero-icon">🧹✨</span>
-                <h1>Desktop Organization<br>Made Delightful</h1>
-                <p class="subtitle">
-                    TidyTop automatically organizes your desktop files into smart categories. 
-                    Clean up your desktop with just one click!
+    <section class="pt-24 pb-20 px-4 bg-foreground text-background relative">
+        <div class="max-w-5xl mx-auto text-center">
+            <div class="text-8xl mb-8">🧹</div>
+            <h1 class="text-5xl md:text-7xl font-bold mb-8 leading-tight">
+                Your desktop looks like a<br>
+                <span class="text-accent">tornado hit a filing cabinet.</span>
+            </h1>
+            <p class="text-2xl md:text-3xl mb-10 max-w-4xl mx-auto font-medium text-background/80">
+                <span class="highlight-purple-custom">TidyTop fixes that.</span> <span class="hand-circle">One click. Done.</span><br>No life coaching required.
+            </p>
+            <div class="bg-background/10 border border-background/20 rounded-2xl p-8 mb-10 max-w-3xl mx-auto backdrop-blur-sm">
+                <p class="text-xl font-semibold text-background">
+                    Choose what you'd pay for a drink. That's what TidyTop costs today. 
+                    <br><span class="text-accent">Because pricing should be as simple as organizing your mess.</span>
                 </p>
-                <div class="hero-buttons">
-                    <a href="#download" class="btn-secondary">📥 Download Free</a>
-                    <a href="#how-it-works" class="btn-primary">👀 See How It Works</a>
+            </div>
+            <button onclick="scrollToPricing()" class="bg-background text-foreground px-10 py-5 rounded-2xl text-xl font-bold hover:bg-background/90 transition-all transform hover:scale-105 shadow-2xl">
+                🎯 Pick Your Price Below
+            </button>
+        </div>
+    </section>
+
+    <!-- Pricing Grid -->
+    <section id="pricing" class="py-24 px-4 bg-card">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-6xl font-black text-card-foreground mb-6">
+                    Choose Your Drink, Choose Your Price
+                </h2>
+                <p class="text-xl text-muted-foreground max-w-2xl mx-auto">
+                    Real-world pricing meets software downloads. Pick what feels right.
+                </p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                <!-- Coffee Card -->
+                <div class="drink-card bg-card rounded-3xl p-8 shadow-lg border border-muted flex flex-col h-full group">
+                    <div class="text-6xl mb-4 group-hover:scale-110 transition-transform">☕</div>
+                    <h3 class="text-2xl font-bold text-card-foreground mb-3">Coffee</h3>
+                    <div class="text-3xl font-black text-primary mb-4 price-pulse">$3.47</div>
+                    <p class="text-muted-foreground mb-6 leading-relaxed flex-grow text-sm">The fuel of productivity. Also, coincidentally, the price of getting your life together.</p>
+                    <button onclick="selectDrink('Coffee')" class="w-full bg-primary text-primary-foreground py-3 px-4 rounded-xl hover:opacity-90 transition-all font-semibold transform hover:scale-105 shadow-lg">
+                        Pay & Download
+                    </button>
+                </div>
+
+                <!-- Red Bull Card -->
+                <div class="drink-card bg-card rounded-3xl p-8 shadow-lg border border-muted flex flex-col h-full group">
+                    <div class="text-6xl mb-4 group-hover:scale-110 transition-transform">🥤</div>
+                    <h3 class="text-2xl font-bold text-card-foreground mb-3">Red Bull</h3>
+                    <div class="text-3xl font-black text-primary mb-4 price-pulse">$2.89</div>
+                    <p class="text-muted-foreground mb-6 leading-relaxed flex-grow text-sm">Gives you wings. TidyTop gives you organized folders. Similar energy.</p>
+                    <button onclick="selectDrink('Red Bull')" class="w-full bg-primary text-primary-foreground py-3 px-4 rounded-xl hover:opacity-90 transition-all font-semibold transform hover:scale-105 shadow-lg">
+                        Pay & Download
+                    </button>
+                </div>
+
+                <!-- Water Card -->
+                <div class="drink-card bg-card rounded-3xl p-8 shadow-lg border border-muted flex flex-col h-full group">
+                    <div class="text-6xl mb-4 group-hover:scale-110 transition-transform">💧</div>
+                    <h3 class="text-2xl font-bold text-card-foreground mb-3">Water</h3>
+                    <div class="text-3xl font-black text-primary mb-4 price-pulse">$1.25</div>
+                    <p class="text-muted-foreground mb-6 leading-relaxed flex-grow text-sm">Basic necessity meets basic software pricing. Hydration optional, organization included.</p>
+                    <button onclick="selectDrink('Water')" class="w-full bg-primary text-primary-foreground py-3 px-4 rounded-xl hover:opacity-90 transition-all font-semibold transform hover:scale-105 shadow-lg">
+                        Pay & Download
+                    </button>
+                </div>
+
+                <!-- Milk Card -->
+                <div class="drink-card bg-card rounded-3xl p-8 shadow-lg border border-muted flex flex-col h-full group">
+                    <div class="text-6xl mb-4 group-hover:scale-110 transition-transform">🥛</div>
+                    <h3 class="text-2xl font-bold text-card-foreground mb-3">Milk</h3>
+                    <div class="text-3xl font-black text-primary mb-4 price-pulse">$2.15</div>
+                    <p class="text-muted-foreground mb-6 leading-relaxed flex-grow text-sm">Got organized files? You will.</p>
+                    <button onclick="selectDrink('Milk')" class="w-full bg-primary text-primary-foreground py-3 px-4 rounded-xl hover:opacity-90 transition-all font-semibold transform hover:scale-105 shadow-lg">
+                        Pay & Download
+                    </button>
+                </div>
+
+                <!-- Coca-Cola Card -->
+                <div class="drink-card bg-card rounded-3xl p-8 shadow-lg border border-muted flex flex-col h-full group">
+                    <div class="text-6xl mb-4 group-hover:scale-110 transition-transform">🥤</div>
+                    <h3 class="text-2xl font-bold text-card-foreground mb-3">Coca-Cola</h3>
+                    <div class="text-3xl font-black text-primary mb-4 price-pulse">$1.99</div>
+                    <p class="text-muted-foreground mb-6 leading-relaxed flex-grow text-sm">The real thing. Unlike your desktop organization skills.</p>
+                    <button onclick="selectDrink('Coca-Cola')" class="w-full bg-primary text-primary-foreground py-3 px-4 rounded-xl hover:opacity-90 transition-all font-semibold transform hover:scale-105 shadow-lg">
+                        Pay & Download
+                    </button>
+                </div>
+
+                <!-- Heineken Zero Card -->
+                <div class="drink-card bg-card rounded-3xl p-8 shadow-lg border border-muted flex flex-col h-full group">
+                    <div class="text-6xl mb-4 group-hover:scale-110 transition-transform">🍺</div>
+                    <h3 class="text-2xl font-bold text-card-foreground mb-3">Heineken Zero</h3>
+                    <div class="text-3xl font-black text-primary mb-4 price-pulse">$4.50</div>
+                    <p class="text-muted-foreground mb-6 leading-relaxed flex-grow text-sm">Zero alcohol, maximum desktop zen.</p>
+                    <button onclick="selectDrink('Heineken Zero')" class="w-full bg-primary text-primary-foreground py-3 px-4 rounded-xl hover:opacity-90 transition-all font-semibold transform hover:scale-105 shadow-lg">
+                        Pay & Download
+                    </button>
+                </div>
+
+                <!-- Orange Juice Card -->
+                <div class="drink-card bg-card rounded-3xl p-8 shadow-lg border border-muted flex flex-col h-full group">
+                    <div class="text-6xl mb-4 group-hover:scale-110 transition-transform">🧃</div>
+                    <h3 class="text-2xl font-bold text-card-foreground mb-3">Orange Juice</h3>
+                    <div class="text-3xl font-black text-primary mb-4 price-pulse">$2.85</div>
+                    <p class="text-muted-foreground mb-6 leading-relaxed flex-grow text-sm">Vitamin C for your computer's health.</p>
+                    <button onclick="selectDrink('Orange Juice')" class="w-full bg-primary text-primary-foreground py-3 px-4 rounded-xl hover:opacity-90 transition-all font-semibold transform hover:scale-105 shadow-lg">
+                        Pay & Download
+                    </button>
+                </div>
+
+                <!-- Green Tea Card -->
+                <div class="drink-card bg-card rounded-3xl p-8 shadow-lg border border-muted flex flex-col h-full group">
+                    <div class="text-6xl mb-4 group-hover:scale-110 transition-transform">🍵</div>
+                    <h3 class="text-2xl font-bold text-card-foreground mb-3">Green Tea</h3>
+                    <div class="text-3xl font-black text-primary mb-4 price-pulse">$2.10</div>
+                    <p class="text-muted-foreground mb-6 leading-relaxed flex-grow text-sm">Zen pricing for zen organization.</p>
+                    <button onclick="selectDrink('Green Tea')" class="w-full bg-primary text-primary-foreground py-3 px-4 rounded-xl hover:opacity-90 transition-all font-semibold transform hover:scale-105 shadow-lg">
+                        Pay & Download
+                    </button>
+                </div>
+
+                <!-- Whiskey Card -->
+                <div class="drink-card bg-card rounded-3xl p-8 shadow-lg border border-muted flex flex-col h-full group">
+                    <div class="text-6xl mb-4 group-hover:scale-110 transition-transform">🥃</div>
+                    <h3 class="text-2xl font-bold text-card-foreground mb-3">Whiskey</h3>
+                    <div class="text-3xl font-black text-primary mb-4 price-pulse">$8.00</div>
+                    <p class="text-muted-foreground mb-6 leading-relaxed flex-grow text-sm">For when you're serious about both your drinks and your desktop hygiene.</p>
+                    <button onclick="selectDrink('Whiskey')" class="w-full bg-primary text-primary-foreground py-3 px-4 rounded-xl hover:opacity-90 transition-all font-semibold transform hover:scale-105 shadow-lg">
+                        Pay & Download
+                    </button>
+                </div>
+
+                <!-- Wine Card -->
+                <div class="drink-card bg-card rounded-3xl p-8 shadow-lg border border-muted flex flex-col h-full group">
+                    <div class="text-6xl mb-4 group-hover:scale-110 transition-transform">🍷</div>
+                    <h3 class="text-2xl font-bold text-card-foreground mb-3">Wine</h3>
+                    <div class="text-3xl font-black text-primary mb-4 price-pulse">$7.50</div>
+                    <p class="text-muted-foreground mb-6 leading-relaxed flex-grow text-sm">Sophisticated pricing for sophisticated file management.</p>
+                    <button onclick="selectDrink('Wine')" class="w-full bg-primary text-primary-foreground py-3 px-4 rounded-xl hover:opacity-90 transition-all font-semibold transform hover:scale-105 shadow-lg">
+                        Pay & Download
+                    </button>
+                </div>
+
+                <!-- Hot Chocolate Card -->
+                <div class="drink-card bg-card rounded-3xl p-8 shadow-lg border border-muted flex flex-col h-full group">
+                    <div class="text-6xl mb-4 group-hover:scale-110 transition-transform">🍫</div>
+                    <h3 class="text-2xl font-bold text-card-foreground mb-3">Hot Chocolate</h3>
+                    <div class="text-3xl font-black text-primary mb-4 price-pulse">$3.20</div>
+                    <p class="text-muted-foreground mb-6 leading-relaxed flex-grow text-sm">Warm and cozy, like your newly organized desktop.</p>
+                    <button onclick="selectDrink('Hot Chocolate')" class="w-full bg-primary text-primary-foreground py-3 px-4 rounded-xl hover:opacity-90 transition-all font-semibold transform hover:scale-105 shadow-lg">
+                        Pay & Download
+                    </button>
+                </div>
+
+                <!-- Coconut Water Card -->
+                <div class="drink-card bg-card rounded-3xl p-8 shadow-lg border border-muted flex flex-col h-full group">
+                    <div class="text-6xl mb-4 group-hover:scale-110 transition-transform">🥥</div>
+                    <h3 class="text-2xl font-bold text-card-foreground mb-3">Coconut Water</h3>
+                    <div class="text-3xl font-black text-primary mb-4 price-pulse">$3.75</div>
+                    <p class="text-muted-foreground mb-6 leading-relaxed flex-grow text-sm">Tropical vibes, organized files.</p>
+                    <button onclick="selectDrink('Coconut Water')" class="w-full bg-primary text-primary-foreground py-3 px-4 rounded-xl hover:opacity-90 transition-all font-semibold transform hover:scale-105 shadow-lg">
+                        Pay & Download
+                    </button>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Features Section -->
-    <section class="features" id="features">
-        <div class="container">
-            <h2 class="section-title">Why You'll Love TidyTop</h2>
-            <div class="features-grid">
-                <div class="feature-card">
-                    <span class="feature-icon">🧹</span>
-                    <h3 class="feature-title">One-Click Organization</h3>
-                    <p class="feature-description">
-                        Transform a messy desktop into organized folders instantly. 
-                        No more hunting through scattered files!
-                    </p>
-                </div>
-                
-                <div class="feature-card">
-                    <span class="feature-icon">👁️</span>
-                    <h3 class="feature-title">Preview First</h3>
-                    <p class="feature-description">
-                        See exactly what will be organized before any changes. 
-                        You're always in control of your files.
-                    </p>
-                </div>
-                
-                <div class="feature-card">
-                    <span class="feature-icon">📸</span>
-                    <h3 class="feature-title">Smart Screenshots</h3>
-                    <p class="feature-description">
-                        Screenshots get special treatment with burst detection 
-                        and a convenient "Today" folder for easy access.
-                    </p>
-                </div>
-                
-                <div class="feature-card">
-                    <span class="feature-icon">✨</span>
-                    <h3 class="feature-title">Auto-Clean Mode</h3>
-                    <p class="feature-description">
-                        Optional background monitoring keeps your desktop 
-                        clean automatically as you work.
-                    </p>
-                </div>
-                
-                <div class="feature-card">
-                    <span class="feature-icon">↩️</span>
-                    <h3 class="feature-title">Safe & Reversible</h3>
-                    <p class="feature-description">
-                        Complete undo system means you can always restore 
-                        files to their original locations.
-                    </p>
-                </div>
-                
-                <div class="feature-card">
-                    <span class="feature-icon">⚙️</span>
-                    <h3 class="feature-title">Fully Customizable</h3>
-                    <p class="feature-description">
-                        Create custom categories, rename folders, and set 
-                        up rules that match your workflow.
-                    </p>
-                </div>
+    <!-- What TidyTop Does -->
+    <section id="features" class="py-24 px-4 bg-background">
+        <div class="max-w-5xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-6xl font-black text-foreground mb-8">
+                    But seriously, what is TidyTop?
+                </h2>
+                <p class="text-2xl text-muted-foreground max-w-3xl mx-auto font-medium">
+                    It's desktop organization that doesn't suck. Runs in your menu bar. 
+                    Sorts your chaos. Includes undo because we're not monsters.
+                </p>
             </div>
-        </div>
-    </section>
-
-    <!-- How It Works -->
-    <section class="how-it-works" id="how-it-works">
-        <div class="container">
-            <h2 class="section-title">Simple as 1-2-3-4</h2>
-            <div class="steps">
-                <div class="step">
-                    <div class="step-number">1</div>
-                    <h3 class="step-title">Install & Launch</h3>
-                    <p class="step-description">
-                        Download TidyTop and it appears in your menu bar. 
-                        Quick welcome tutorial gets you started.
-                    </p>
-                </div>
-                
-                <div class="step">
-                    <div class="step-number">2</div>
-                    <h3 class="step-title">Preview Your Files</h3>
-                    <p class="step-description">
-                        Click "Preview Clean" to see exactly how TidyTop 
-                        will organize your desktop files.
-                    </p>
-                </div>
-                
-                <div class="step">
-                    <div class="step-number">3</div>
-                    <h3 class="step-title">Organize!</h3>
-                    <p class="step-description">
-                        Click "Clean Now" and watch your desktop transform 
-                        into organized, date-sorted categories.
-                    </p>
-                </div>
-                
-                <div class="step">
-                    <div class="step-number">4</div>
-                    <h3 class="step-title">Enjoy Clean Desktop</h3>
-                    <p class="step-description">
-                        Your files are organized, easy to find, and your 
-                        desktop looks amazing. Enable auto-clean to keep it that way!
-                    </p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Screenshots -->
-    <section class="screenshots" id="screenshots">
-        <div class="container">
-            <h2 class="section-title">See TidyTop In Action</h2>
-            <div class="screenshot-container">
-                <div class="screenshot">
-                    <div class="screenshot-placeholder">
-                        📱 Menu Bar Interface<br>
-                        <small>Clean, simple controls</small>
-                    </div>
-                    <div class="screenshot-title">Menu Bar Access</div>
-                    <div class="screenshot-desc">
-                        All TidyTop features accessible from your menu bar - never intrusive, always available.
-                    </div>
-                </div>
-                
-                <div class="screenshot">
-                    <div class="screenshot-placeholder">
-                        👁️ Preview Window<br>
-                        <small>See before organizing</small>
-                    </div>
-                    <div class="screenshot-title">Smart Preview</div>
-                    <div class="screenshot-desc">
-                        Preview exactly what will be organized and where files will go - no surprises!
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Download Section -->
-    <section class="download" id="download">
-        <div class="container">
-            <h2 class="section-title">Ready to Get Organized?</h2>
-            <p style="font-size: 18px; color: #666; margin-bottom: 20px;">
-                Download TidyTop today and transform your desktop experience
-            </p>
             
-            <div class="download-buttons">
-                <a href="dist/TidyTop-1.0.0.dmg" class="download-btn">
-                    🍎 macOS (Intel)
-                </a>
-                <a href="dist/TidyTop-1.0.0-arm64.dmg" class="download-btn">
-                    🍎 macOS (Apple Silicon)
-                </a>
+            <div class="grid md:grid-cols-3 gap-12">
+                <div class="text-center group">
+                    <div class="text-7xl mb-6 group-hover:scale-110 transition-transform">🎯</div>
+                    <h3 class="text-2xl font-bold text-foreground mb-4">One-Click Organization</h3>
+                    <p class="text-muted-foreground leading-relaxed text-lg">Sorts your desktop chaos instantly. No manual filing, no thinking required.</p>
+                </div>
+                
+                <div class="text-center group">
+                    <div class="text-7xl mb-6 group-hover:scale-110 transition-transform">⚡</div>
+                    <h3 class="text-2xl font-bold text-foreground mb-4">Menu Bar Magic</h3>
+                    <p class="text-muted-foreground leading-relaxed text-lg">Lives quietly in your menu bar. Always there, never in the way.</p>
+                </div>
+                
+                <div class="text-center group">
+                    <div class="text-7xl mb-6 group-hover:scale-110 transition-transform">↩️</div>
+                    <h3 class="text-2xl font-bold text-foreground mb-4">Undo Everything</h3>
+                    <p class="text-muted-foreground leading-relaxed text-lg">Made a mistake? Hit undo. We're not monsters who trap you in organization hell.</p>
+                </div>
             </div>
-            
-            <p class="platform-info">
-                Free download • Works on macOS 10.12+ • Windows & Linux coming soon<br>
-                <small>Current version: 1.0.0 • File size: ~100MB</small>
-            </p>
         </div>
     </section>
 
     <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-links">
-                <a href="https://github.com/Kettlebell319/tidytop">GitHub</a>
-                <a href="https://github.com/Kettlebell319/tidytop/issues">Support</a>
-                <a href="#features">Features</a>
-                <a href="#download">Download</a>
+    <footer class="bg-foreground text-background py-20 px-4">
+        <div class="max-w-5xl mx-auto">
+            <div class="text-center mb-12">
+                <div class="glass-card bg-muted/20 rounded-3xl p-10 mb-12 border border-muted">
+                    <p class="text-2xl text-background/90 mb-6 font-medium">
+                        Rather pay like a normal person? Fine.
+                    </p>
+                    <button class="bg-background text-foreground px-8 py-4 rounded-2xl font-bold hover:bg-muted transition-all text-xl transform hover:scale-105 shadow-2xl">
+                        Download for $5
+                    </button>
+                    <p class="text-background/70 mt-4 text-lg">
+                        The price of a fancy latte, minus the pretension.
+                    </p>
+                </div>
             </div>
-            <div class="footer-copyright">
-                © 2025 TidyTop. Desktop organization made delightful. Built with ❤️ and Claude Code.
+            
+            <div class="border-t border-muted pt-12 text-center">
+                <div class="flex justify-center space-x-12 mb-8">
+                    <a href="#" class="text-background/70 hover:text-background transition-colors text-lg font-medium">Privacy</a>
+                    <a href="#" class="text-background/70 hover:text-background transition-colors text-lg font-medium">Terms</a>
+                    <a href="#" class="text-background/70 hover:text-background transition-colors text-lg font-medium">Support</a>
+                </div>
+                <p class="text-background/70 text-lg">
+                    © 2024 TidyTop. Making desktops less embarrassing, one click at a time.
+                </p>
             </div>
         </div>
     </footer>
 
-    <script>
-        // Smooth scrolling for navigation links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }
-            });
-        });
+    <!-- Selection Modal -->
+    <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 hidden">
+        <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl">
+            <h3 class="text-3xl font-bold mb-6 text-center">Great choice! 🎉</h3>
+            <p class="text-gray-600 mb-8 text-center text-lg">
+                You selected <span id="selected-drink" class="font-bold text-primary"></span>. In a real app, this would redirect to payment processing.
+            </p>
+            <div class="flex space-x-4">
+                <button onclick="closeModal()" class="flex-1 bg-gray-200 text-gray-800 py-3 px-4 rounded-xl hover:bg-gray-300 transition-colors font-semibold">
+                    Cancel
+                </button>
+                <button onclick="closeModal()" class="flex-1 bg-primary text-primary-foreground py-3 px-4 rounded-xl hover:opacity-90 transition-colors font-semibold">
+                    Continue
+                </button>
+            </div>
+        </div>
+    </div>
 
-        // Add scroll effect to header
-        window.addEventListener('scroll', () => {
-            const header = document.querySelector('.header');
-            if (window.scrollY > 50) {
-                header.style.background = 'rgba(255, 255, 255, 0.98)';
-            } else {
-                header.style.background = 'rgba(255, 255, 255, 0.95)';
+    <script>
+        function scrollToPricing() {
+            document.getElementById('pricing').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function selectDrink(drink) {
+            document.getElementById('selected-drink').textContent = drink;
+            document.getElementById('modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.add('hidden');
+        }
+
+        // Close modal on escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
             }
         });
     </script>
