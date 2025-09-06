@@ -60,8 +60,16 @@
           "arch": [
             "x64"
           ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
         }
-      ]
+      ],
+      "publisherName": "TidyTop Team",
+      "verifyUpdateCodeSignature": false
     },
     "linux": {
       "category": "Utility",

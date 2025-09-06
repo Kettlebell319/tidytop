@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Find - TidyTop</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .title {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2563EB;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.2s;
+            box-sizing: border-box;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #2563EB;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .search-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 100;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+        
+        .suggestion-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #f3f4f6;
+            transition: background-color 0.2s;
+        }
+        
+        .suggestion-item:hover {
+            background-color: #f3f4f6;
+        }
+        
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+        
+        .stats {
+            background: #f8f9fa;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2563EB;
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+        
+        .results-container {
+            margin-top: 20px;
+        }
+        
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .results-count {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .results-time {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .result-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+        }
+        
+        .result-item:hover {
+            border-color: #2563EB;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
+            transform: translateY(-1px);
+        }
+        
+        .result-icon {
+            font-size: 24px;
+            margin-right: 12px;
+            min-width: 32px;
+        }
+        
+        .result-info {
+            flex: 1;
+        }
+        
+        .result-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        
+        .result-path {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 2px;
+        }
+        
+        .result-meta {
+            font-size: 11px;
+            color: #999;
+        }
+        
+        .result-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn {
+            background: #2563EB;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover {
+            background: #1d4ed8;
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+        }
+        
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+        
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e5e7eb;
+            border-top: 2px solid #2563EB;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .quick-filters {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-chip {
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .filter-chip:hover {
+            background: #e5e7eb;
+        }
+        
+        .filter-chip.active {
+            background: #2563EB;
+            color: white;
+            border-color: #2563EB;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title">🔍 Smart Find</div>
+            <div class="subtitle">Search your organized files with natural language</div>
+        </div>
+        
+        <div class="stats">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-number" id="totalFiles">-</span>
+                    <div class="stat-label">Indexed Files</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="categories">-</span>
+                    <div class="stat-label">Categories</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="indexedToday">-</span>
+                    <div class="stat-label">Added Today</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="searchReady">⏳</span>
+                    <div class="stat-label">Status</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="search-box">
+            <input type="text" 
+                   class="search-input" 
+                   id="searchInput"
+                   placeholder="Try: 'PDFs from last week' or 'screenshots today' or 'invoice'"
+                   autocomplete="off">
+            <div class="search-suggestions" id="suggestions"></div>
+        </div>
+        
+        <div class="quick-filters">
+            <div class="filter-chip" data-filter="today">Today</div>
+            <div class="filter-chip" data-filter="week">This Week</div>
+            <div class="filter-chip" data-filter="month">This Month</div>
+            <div class="filter-chip" data-filter="PDFs">PDFs</div>
+            <div class="filter-chip" data-filter="Images">Images</div>
+            <div class="filter-chip" data-filter="Screenshots">Screenshots</div>
+            <div class="filter-chip" data-filter="Docs">Documents</div>
+        </div>
+        
+        <div class="results-container" id="resultsContainer" style="display: none;">
+            <div class="results-header">
+                <div class="results-count" id="resultsCount">0 results</div>
+                <div class="results-time" id="resultsTime"></div>
+            </div>
+            <div id="resultsList"></div>
+        </div>
+        
+        <div class="empty-state" id="emptyState">
+            <div class="empty-icon">🔍</div>
+            <h3>Start typing to search your organized files</h3>
+            <p>Try natural language like "PDFs from last week" or just type a filename</p>
+        </div>
+    </div>
+
+    <script>
+        let searchTimeout = null;
+        let currentQuery = '';
+        
+        // Load search statistics on page load
+        async function loadSearchStats() {
+            try {
+                const stats = await window.electronAPI.getSearchStats();
+                
+                document.getElementById('totalFiles').textContent = stats.totalFiles.toLocaleString();
+                document.getElementById('categories').textContent = stats.categories;
+                document.getElementById('indexedToday').textContent = stats.indexedToday;
+                document.getElementById('searchReady').textContent = stats.canSearch ? '✅' : '❌';
+                
+                if (!stats.canSearch) {
+                    document.querySelector('.subtitle').innerHTML = 
+                        'No organized files found. Use TidyTop to organize your desktop first!';
+                }
+                
+            } catch (error) {
+                console.error('Failed to load search stats:', error);
+                document.querySelector('.subtitle').innerHTML = 
+                    'Error loading search information';
+            }
+        }
+        
+        // Handle search input
+        const searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.trim();
+            
+            // Clear previous timeout
+            if (searchTimeout) {
+                clearTimeout(searchTimeout);
+            }
+            
+            // Debounce search
+            searchTimeout = setTimeout(() => {
+                if (query.length > 0) {
+                    performSearch(query);
+                } else {
+                    showEmptyState();
+                }
+            }, 300);
+        });
+        
+        // Handle Enter key for immediate search
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const query = e.target.value.trim();
+                if (query.length > 0) {
+                    if (searchTimeout) {
+                        clearTimeout(searchTimeout);
+                    }
+                    performSearch(query);
+                }
+            }
+        });
+        
+        // Quick filter chips
+        document.querySelectorAll('.filter-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                // Toggle active state
+                const isActive = chip.classList.contains('active');
+                document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+                
+                if (!isActive) {
+                    chip.classList.add('active');
+                    const filter = chip.dataset.filter;
+                    searchInput.value = filter;
+                    performSearch(filter);
+                } else {
+                    searchInput.value = '';
+                    showEmptyState();
+                }
+            });
+        });
+        
+        // Perform search
+        async function performSearch(query) {
+            if (query === currentQuery) return; // Avoid duplicate searches
+            currentQuery = query;
+            
+            const resultsContainer = document.getElementById('resultsContainer');
+            const emptyState = document.getElementById('emptyState');
+            const resultsList = document.getElementById('resultsList');
+            
+            // Show loading state
+            resultsContainer.style.display = 'block';
+            emptyState.style.display = 'none';
+            resultsList.innerHTML = '<div class="loading"><div class="spinner"></div>Searching...</div>';
+            
+            try {
+                const startTime = Date.now();
+                const results = await window.electronAPI.searchFiles(query);
+                const searchTime = Date.now() - startTime;
+                
+                // Update results header
+                document.getElementById('resultsCount').textContent = 
+                    `${results.count} result${results.count !== 1 ? 's' : ''}`;
+                document.getElementById('resultsTime').textContent = 
+                    `${searchTime}ms`;
+                
+                // Render results
+                if (results.count > 0) {
+                    renderResults(results.results);
+                } else {
+                    resultsList.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">🤷‍♂️</div>
+                            <h3>No files found</h3>
+                            <p>Try a different search term or organize more files first</p>
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                console.error('Search failed:', error);
+                resultsList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">❌</div>
+                        <h3>Search failed</h3>
+                        <p>Please try again or restart TidyTop</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Render search results
+        function renderResults(results) {
+            const resultsList = document.getElementById('resultsList');
+            
+            const categoryIcons = {
+                'Screenshots': '📸',
+                'Images': '🖼️', 
+                'PDFs': '📄',
+                'Docs': '📝',
+                'Slides': '📊',
+                'Sheets': '📈',
+                'Archives': '📦',
+                'Video': '🎥',
+                'Audio': '🎵',
+                'Apps': '📱',
+                'Misc': '📁'
+            };
+            
+            resultsList.innerHTML = results.map(result => {
+                const icon = categoryIcons[result.category] || '📄';
+                const dateOrganized = new Date(result.date_organized).toLocaleDateString();
+                const fileSizeKB = Math.round((result.file_size || 0) / 1024);
+                
+                return `
+                    <div class="result-item" onclick="openFile('${result.current_path.replace(/'/g, "\\'")}')">
+                        <div class="result-icon">${icon}</div>
+                        <div class="result-info">
+                            <div class="result-name">${result.filename}</div>
+                            <div class="result-path">${result.current_path}</div>
+                            <div class="result-meta">${result.category} • ${dateOrganized} • ${fileSizeKB}KB</div>
+                        </div>
+                        <div class="result-actions">
+                            <button class="btn btn-secondary" onclick="event.stopPropagation(); showInFinder('${result.current_path.replace(/'/g, "\\'")}')">Show</button>
+                            <button class="btn" onclick="event.stopPropagation(); openFile('${result.current_path.replace(/'/g, "\\'")}')">Open</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Show empty state
+        function showEmptyState() {
+            document.getElementById('resultsContainer').style.display = 'none';
+            document.getElementById('emptyState').style.display = 'block';
+            currentQuery = '';
+        }
+        
+        // Open file in default application
+        async function openFile(filePath) {
+            try {
+                await window.electronAPI.openFile(filePath);
+            } catch (error) {
+                console.error('Failed to open file:', error);
+                alert('Could not open file');
+            }
+        }
+        
+        // Show file in Finder/Explorer
+        async function showInFinder(filePath) {
+            try {
+                await window.electronAPI.showInFinder(filePath);
+            } catch (error) {
+                console.error('Failed to show in finder:', error);
+                alert('Could not show file location');
+            }
+        }
+        
+        // Load stats when page loads
+        loadSearchStats();
+        
+        // Focus search input
+        searchInput.focus();
+    </script>
+</body>
+</html>

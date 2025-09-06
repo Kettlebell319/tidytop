@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Find Test - TidyTop</title>
+    <style>
+        body { 
+            font-family: system-ui; 
+            padding: 20px; 
+            text-align: center; 
+        }
+        .test-button {
+            background: #2563EB;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Smart Find Test</h1>
+    <p>Testing basic functionality...</p>
+    
+    <button class="test-button" onclick="testBasic()">Test Basic</button>
+    <button class="test-button" onclick="testSearch()">Test Search</button>
+    <button class="test-button" onclick="testIPC()">Test IPC</button>
+    
+    <div id="output"></div>
+
+    <script>
+        function log(message) {
+            document.getElementById('output').innerHTML += '<p>' + message + '</p>';
+            console.log(message);
+        }
+        
+        function testBasic() {
+            log('✅ Basic JavaScript working');
+        }
+        
+        async function testIPC() {
+            try {
+                if (window.electronAPI) {
+                    log('✅ electronAPI available');
+                    
+                    const stats = await window.electronAPI.getSearchStats();
+                    log('✅ IPC call successful: ' + JSON.stringify(stats));
+                } else {
+                    log('❌ electronAPI not available');
+                }
+            } catch (error) {
+                log('❌ IPC test failed: ' + error.message);
+            }
+        }
+        
+        async function testSearch() {
+            try {
+                if (window.electronAPI && window.electronAPI.searchFiles) {
+                    const results = await window.electronAPI.searchFiles('test');
+                    log('✅ Search test successful: ' + results.count + ' results');
+                } else {
+                    log('❌ Search function not available');
+                }
+            } catch (error) {
+                log('❌ Search test failed: ' + error.message);
+            }
+        }
+        
+        // Auto-run basic tests
+        setTimeout(() => {
+            testBasic();
+            testIPC();
+        }, 100);
+    </script>
+</body>
+</html>

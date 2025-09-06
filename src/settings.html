@@ -167,16 +167,7 @@
             </div>
         </div>
         
-        <div class="section">
-            <h3>Custom Rules</h3>
-            <p style="margin-bottom: 12px; color: #666;">Add custom rules to organize files with specific names or patterns.</p>
-            
-            <div id="rulesContainer">
-                <!-- Rules will be dynamically added here -->
-            </div>
-            
-            <button class="btn btn-secondary btn-small" onclick="addRule()">+ Add Rule</button>
-        </div>
+        <!-- Custom Rules section removed - will be replaced with first-time preview workflow -->
         
         <div class="section">
             <h3>File Extensions</h3>
@@ -244,12 +235,14 @@
                 ruleDiv.className = 'rule-item';
                 ruleDiv.innerHTML = `
                     <div class="rule-inputs">
-                        <input type="text" placeholder="Contains (comma-separated)" 
+                        <input type="text" placeholder="Files containing: invoice, receipt, contract" 
                                value="${(rule.contains || []).join(', ')}" 
-                               onchange="updateRule(${index}, 'contains', this.value)">
-                        <input type="text" placeholder="Starts with (comma-separated)" 
+                               onchange="updateRule(${index}, 'contains', this.value)"
+                               title="Files with names containing these words will be organized to the selected category">
+                        <input type="text" placeholder="Files starting with: IMG_, Screenshot, Screen Shot" 
                                value="${(rule.prefix || []).join(', ')}" 
-                               onchange="updateRule(${index}, 'prefix', this.value)">
+                               onchange="updateRule(${index}, 'prefix', this.value)"
+                               title="Files with names starting with these prefixes will be organized to the selected category">
                         <select onchange="updateRule(${index}, 'dest', this.value)">
                             <option value="PDFs" ${rule.dest === 'PDFs' ? 'selected' : ''}>PDFs</option>
                             <option value="Images" ${rule.dest === 'Images' ? 'selected' : ''}>Images</option>

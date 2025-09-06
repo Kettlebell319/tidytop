@@ -9,6 +9,7 @@ class DesktopOrganizer {
     this.config = require('../../../config/default.json');
     this.desktopPath = path.join(os.homedir(), 'Desktop');
     this.moveLog = [];
+    this.smartSearch = null;
   }
 
   async cleanDesktop() {
@@ -38,6 +39,9 @@ class DesktopOrganizer {
 
       // Save move log
       await this.saveMoveLog();
+      
+      // Index organized files for Smart Find
+      await this.indexOrganizedFiles();
       
       return results;
     } catch (error) {
@@ -122,6 +126,42 @@ class DesktopOrganizer {
     }
 
     return false;
+  }
+
+  /**
+   * Determine the category for a file based on its extension and name
+   */
+  determineCategory(file) {
+    // Check for screenshots first
+    if (this.isScreenshot(file)) {
+      return 'Screenshots';
+    }
+
+    // Get file extension
+    const ext = file.ext ? file.ext.toLowerCase().replace('.', '') : '';
+    
+    // Look up category by extension in config
+    if (this.config.extensions && this.config.extensions[ext]) {
+      return this.config.extensions[ext];
+    }
+
+    // Default to Misc for unknown types
+    return 'Misc';
+  }
+
+  /**
+   * Check if a file is a screenshot based on its name
+   */
+  isScreenshot(file) {
+    const screenshotPatterns = [
+      /^Screenshot/i,
+      /^Screen Shot/i,
+      /^CleanShot/i,
+      /^scr_/i,
+      /screenshot/i
+    ];
+    
+    return screenshotPatterns.some(pattern => pattern.test(file.name));
   }
 
   async organizeFile(file) {
@@ -532,6 +572,126 @@ class DesktopOrganizer {
       return preview;
     } catch (error) {
       console.error('Preview analysis failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Index recently organized files for Smart Find
+   */
+  async indexOrganizedFiles() {
+    try {
+      if (!this.smartSearch) {
+        const { SmartSearch } = require('../index/search');
+        this.smartSearch = new SmartSearch();
+        await this.smartSearch.initialize();
+      }
+
+      // Index each file that was moved in this session
+      for (const move of this.moveLog) {
+        try {
+          const stats = await fs.stat(move.newPath);
+          const extension = path.extname(move.fileName).toLowerCase().substring(1);
+          
+          await this.smartSearch.indexFile({
+            filename: move.fileName,
+            originalPath: move.originalPath,
+            currentPath: move.newPath,
+            category: move.category,
+            extension,
+            size: stats.size,
+            dateCreated: stats.birthtime.toISOString(),
+            dateModified: stats.mtime.toISOString(),
+            isFolder: false
+          });
+        } catch (error) {
+          console.error(`Failed to index ${move.fileName}:`, error.message);
+        }
+      }
+
+      await this.smartSearch.close();
+      this.smartSearch = null;
+
+      if (this.moveLog.length > 0) {
+        console.log(`📚 Indexed ${this.moveLog.length} files for Smart Find`);
+      }
+    } catch (error) {
+      console.error('Failed to index files for Smart Find:', error);
+    }
+  }
+
+  /**
+   * Organize desktop files with user-approved custom folder names
+   * Used by the preview-and-approve workflow
+   */
+  async organizeWithCustomNames(analysisResult) {
+    console.log('🧹 Starting organization with custom folder names...');
+    
+    try {
+      const results = {
+        movedCount: 0,
+        skippedCount: 0,
+        errors: [],
+        foldersCreated: []
+      };
+
+      // Process each category with its custom folder name
+      for (const [category, files] of Object.entries(analysisResult.categories)) {
+        if (files.length === 0) continue;
+        
+        const customFolderName = analysisResult.folderNames[category] || category;
+        const categoryPath = path.join(this.desktopPath, customFolderName);
+        
+        // Ensure the custom category folder exists
+        await this.ensureFolder(categoryPath);
+        if (!results.foldersCreated.includes(customFolderName)) {
+          results.foldersCreated.push(customFolderName);
+        }
+        
+        // Move files to the custom folder
+        for (const fileInfo of files) {
+          try {
+            // Load full file info
+            const fullFile = {
+              name: fileInfo.name,
+              fullPath: fileInfo.path,
+              ext: path.extname(fileInfo.name).toLowerCase()
+            };
+            
+            const destPath = path.join(categoryPath, fileInfo.name);
+            const finalPath = await this.findAvailablePath(categoryPath, fileInfo.name);
+            
+            await this.moveFile(fileInfo.path, finalPath);
+            
+            // Log the move
+            this.moveLog.push({
+              fileName: fileInfo.name,
+              originalPath: fileInfo.path,
+              newPath: finalPath,
+              category: customFolderName,
+              movedAt: new Date().toISOString()
+            });
+            
+            results.movedCount++;
+          } catch (error) {
+            console.error(`Error organizing ${fileInfo.name}:`, error);
+            results.errors.push({ file: fileInfo.name, error: error.message });
+            results.skippedCount++;
+          }
+        }
+      }
+
+      // Save move log
+      await this.saveMoveLog();
+      
+      // Skip indexing for Smart Find due to SQLite crashes
+      // await this.indexOrganizedFiles();
+      
+      console.log(`✅ Organized ${results.movedCount} files into ${results.foldersCreated.length} folders`);
+      return results;
+      
+    } catch (error) {
+      console.error('Organization with custom names failed:', error);
       throw error;
     }
   }

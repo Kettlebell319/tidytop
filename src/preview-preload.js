@@ -1,7 +1,13 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
-// Expose protected methods that allow the preview window to communicate
+// Expose protected methods for preview approval workflow
 contextBridge.exposeInMainWorld('electronAPI', {
-  onPreviewData: (callback) => ipcRenderer.on('preview-data', (event, data) => callback(data)),
-  organizeNow: () => ipcRenderer.send('organize-now'),
+  // Analyze desktop files and return categorization
+  analyzeDesktop: () => ipcRenderer.invoke('analyze-desktop'),
+  
+  // Execute organization with user-approved folder names
+  executeOrganization: (analysisResult) => ipcRenderer.invoke('execute-organization', analysisResult),
+  
+  // Close preview window
+  closeWindow: () => window.close()
 });

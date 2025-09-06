@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, Tray, nativeImage, ipcMain } = require('electron');
+const { app, BrowserWindow, Menu, Tray, nativeImage, ipcMain, shell } = require('electron');
 const path = require('path');
 const os = require('os');
 const AutoLaunch = require('auto-launch');
@@ -10,10 +10,12 @@ class TidyTop {
     this.settingsWindow = null;
     this.aboutWindow = null;
     this.previewWindow = null;
+    this.searchWindow = null;
     this.isQuitting = false;
     this.autoCleanEnabled = false;
     this.autoLaunchEnabled = false;
     this.fileWatcher = null;
+    this.autoClean = null;
     this.config = null;
     
     // Auto-launch configuration
@@ -110,11 +112,7 @@ class TidyTop {
   setupMenu() {
     const contextMenu = Menu.buildFromTemplate([
       {
-        label: '🧹 Clean Now',
-        click: () => this.cleanNow()
-      },
-      {
-        label: '👁️ Preview Clean',
+        label: '🧹 Clean Desktop',
         click: () => this.previewClean()
       },
       {
@@ -132,11 +130,11 @@ class TidyTop {
         label: '↩️ Undo Last Clean',
         click: () => this.undoLastClean()
       },
-      { type: 'separator' },
-      {
-        label: '🎨 Play (Design Mode)',
-        click: () => this.enterDesignMode()
-      },
+      // Smart Find temporarily disabled due to SQLite crash
+      // {
+      //   label: '🔍 Smart Find',
+      //   click: () => this.openSmartFind()
+      // },
       { type: 'separator' },
       {
         label: '⚙️ Settings',
@@ -185,27 +183,44 @@ class TidyTop {
   }
 
   async previewClean() {
-    console.log('🔍 Previewing desktop organization...');
+    console.log('🔍 Opening preview and approval workflow...');
     
     try {
-      const { DesktopOrganizer } = require('./core/organize/organizer');
-      const organizer = new DesktopOrganizer();
-      
-      // Get files that would be organized (without actually moving them)
-      const preview = await organizer.previewClean();
-      
-      this.showPreviewWindow(preview);
+      // Open the new preview-and-approve window
+      this.showPreviewWindow();
       
     } catch (error) {
       console.error('Preview failed:', error);
       this.tray.displayBalloon({
         title: 'TidyTop Error',
-        content: 'Failed to preview organization. Check console for details.'
+        content: 'Failed to open preview window. Check console for details.'
       });
     }
   }
 
-  showPreviewWindow(preview) {
+  generateFolderName(category) {
+    const now = new Date();
+    const dateStr = now.toISOString().slice(0, 7); // YYYY-MM format
+    
+    // Generate meaningful folder names based on category
+    const folderNames = {
+      'Screenshots': `Screenshots ${dateStr}`,
+      'Images': 'Images',
+      'PDFs': 'Documents',
+      'Docs': 'Documents', 
+      'Slides': 'Presentations',
+      'Sheets': 'Spreadsheets',
+      'Archives': 'Archives',
+      'Video': 'Videos',
+      'Audio': 'Audio',
+      'Apps': 'Applications',
+      'Misc': 'Miscellaneous'
+    };
+    
+    return folderNames[category] || category;
+  }
+
+  showPreviewWindow() {
     if (this.previewWindow) {
       this.previewWindow.focus();
       return;
@@ -213,14 +228,14 @@ class TidyTop {
 
     this.previewWindow = new BrowserWindow({
       width: 700,
-      height: 500,
+      height: 600,
       webPreferences: {
         nodeIntegration: false,
         contextIsolation: true,
         preload: path.join(__dirname, 'preview-preload.js')
       },
       resizable: true,
-      title: 'TidyTop Preview - What will be organized',
+      title: 'TidyTop Preview - Organize Your Desktop',
       show: false
     });
 
@@ -228,8 +243,6 @@ class TidyTop {
 
     this.previewWindow.once('ready-to-show', () => {
       this.previewWindow.show();
-      // Send preview data to window
-      this.previewWindow.webContents.send('preview-data', preview);
     });
 
     this.previewWindow.on('closed', () => {
@@ -237,23 +250,46 @@ class TidyTop {
     });
   }
 
-  toggleAutoClean(enabled) {
+  async toggleAutoClean(enabled) {
     this.autoCleanEnabled = enabled;
     console.log(`Auto-clean ${enabled ? 'enabled' : 'disabled'}`);
     
-    if (enabled) {
-      this.startFileWatcher();
-    } else {
-      this.stopFileWatcher();
+    try {
+      if (enabled) {
+        // Start Auto-Clean
+        if (!this.autoClean) {
+          const { AutoClean } = require('./core/organize/autoClean');
+          this.autoClean = new AutoClean();
+        }
+        await this.autoClean.start();
+        
+        this.tray.displayBalloon({
+          title: 'Auto-Clean Enabled',
+          content: '⚡ TidyTop will now automatically organize new files'
+        });
+      } else {
+        // Stop Auto-Clean
+        if (this.autoClean) {
+          await this.autoClean.stop();
+        }
+        
+        this.tray.displayBalloon({
+          title: 'Auto-Clean Disabled',
+          content: '⚡ Automatic file organization stopped'
+        });
+      }
+    } catch (error) {
+      console.error('Failed to toggle auto-clean:', error);
+      this.autoCleanEnabled = false; // Reset on error
+      
+      this.tray.displayBalloon({
+        title: 'Auto-Clean Error',
+        content: 'Failed to toggle automatic organization'
+      });
     }
     
     // Refresh menu to update status
     this.setupMenu();
-    
-    this.tray.displayBalloon({
-      title: 'TidyTop',
-      content: `Auto-clean ${enabled ? 'enabled' : 'disabled'}`
-    });
   }
 
   async showRecent() {
@@ -296,21 +332,53 @@ class TidyTop {
     }
   }
 
-  enterDesignMode() {
-    console.log('Design Mode - Coming in Tier 1.5!');
-    
-    // Show a nice preview of what's coming
-    this.tray.displayBalloon({
-      title: '🎨 Design Mode - Coming Soon!',
-      content: 'Tier 1.5 will add playful desktop layouts: ❤️ Heart, ⭐️ Star, 🌀 Spiral, 🟦 Grid arrangements!'
-    });
-    
-    // TODO: Implement in Tier 1.5:
-    // - Heart, Star, Spiral, Grid layouts
-    // - SVG shape coordinates → desktop grid mapping
-    // - Emoji filler folders for empty spots
-    // - Auto-exit after 10 minutes
-    // - One-click return to organized state
+
+  openSmartFind() {
+    try {
+      // Create Smart Find window
+      if (this.searchWindow) {
+        this.searchWindow.focus();
+        return;
+      }
+
+      console.log('Creating Smart Find window...');
+
+      this.searchWindow = new BrowserWindow({
+        width: 900,
+        height: 700,
+        webPreferences: {
+          nodeIntegration: false,
+          contextIsolation: true
+          // Temporarily removing preload to test
+        },
+        show: false
+      });
+
+      console.log('Loading search.html...');
+      this.searchWindow.loadFile(path.join(__dirname, 'search-minimal.html'));
+
+      this.searchWindow.once('ready-to-show', () => {
+        console.log('Smart Find window ready to show');
+        this.searchWindow.show();
+      });
+
+      this.searchWindow.on('closed', () => {
+        console.log('Smart Find window closed');
+        this.searchWindow = null;
+      });
+
+      this.searchWindow.webContents.on('crashed', (event) => {
+        console.error('Smart Find window crashed:', event);
+        this.searchWindow = null;
+      });
+
+    } catch (error) {
+      console.error('Failed to create Smart Find window:', error);
+      this.tray.displayBalloon({
+        title: 'TidyTop Error',
+        content: 'Failed to open Smart Find'
+      });
+    }
   }
 
   openSettings() {
@@ -418,6 +486,238 @@ class TidyTop {
         return false;
       }
     });
+
+    // Design Mode IPC handlers (disabled for v1.0)
+    /*
+    ipcMain.handle('design-get-stats', async () => {
+      try {
+        const { DesktopDesigner } = require('./core/design/designer');
+        const designer = new DesktopDesigner();
+        return await designer.getDesignStats();
+      } catch (error) {
+        console.error('Failed to get design stats:', error);
+        return { success: false, message: error.message };
+      }
+    });
+
+    ipcMain.handle('design-preview', async (event, layoutType) => {
+      try {
+        const { DesktopDesigner } = require('./core/design/designer');
+        const designer = new DesktopDesigner();
+        return await designer.previewDesign(layoutType);
+      } catch (error) {
+        console.error('Failed to preview design:', error);
+        return { success: false, message: error.message };
+      }
+    });
+
+    ipcMain.handle('design-create', async (event, layoutType, options) => {
+      try {
+        const { DesktopDesigner } = require('./core/design/designer');
+        const designer = new DesktopDesigner();
+        const result = await designer.createDesign(layoutType, options);
+        
+        // Show success notification in tray
+        this.tray.displayBalloon({
+          title: 'TidyTop Design Mode',
+          content: result.message
+        });
+        
+        return result;
+      } catch (error) {
+        console.error('Failed to create design:', error);
+        
+        // Show error notification
+        this.tray.displayBalloon({
+          title: 'TidyTop Design Error',
+          content: `Failed to create ${layoutType} layout: ${error.message}`
+        });
+        
+        return { success: false, message: error.message };
+      }
+    });
+
+    // Check if design mode is active
+    ipcMain.handle('design-is-active', async () => {
+      try {
+        const { DesktopDesigner } = require('./core/design/designer');
+        const designer = new DesktopDesigner();
+        return await designer.isDesignModeActive();
+      } catch (error) {
+        console.error('Failed to check design mode status:', error);
+        return false;
+      }
+    });
+
+    // Exit design mode
+    ipcMain.handle('design-exit', async () => {
+      try {
+        const { DesktopDesigner } = require('./core/design/designer');
+        const designer = new DesktopDesigner();
+        const result = await designer.exitDesignMode();
+        
+        // Show notification
+        this.tray.displayBalloon({
+          title: result.success ? 'Design Mode Exited' : 'Exit Failed',
+          content: result.message
+        });
+        
+        return result;
+      } catch (error) {
+        console.error('Failed to exit design mode:', error);
+        
+        this.tray.displayBalloon({
+          title: 'TidyTop Error',
+          content: `Failed to exit design mode: ${error.message}`
+        });
+        
+        return { success: false, message: error.message };
+      }
+    });
+    */
+
+    // Smart Find IPC handlers
+    ipcMain.handle('search-get-stats', async () => {
+      try {
+        const { SmartSearch } = require('./core/index/search');
+        const search = new SmartSearch();
+        const stats = await search.getSearchStats();
+        await search.close();
+        return stats;
+      } catch (error) {
+        console.error('Failed to get search stats:', error);
+        return { totalFiles: 0, categories: 0, indexedToday: 0, canSearch: false };
+      }
+    });
+
+    ipcMain.handle('search-files', async (event, query, options) => {
+      try {
+        const { SmartSearch } = require('./core/index/search');
+        const search = new SmartSearch();
+        const results = await search.search(query, options);
+        await search.close();
+        return results;
+      } catch (error) {
+        console.error('Search failed:', error);
+        return { query, results: [], count: 0, error: error.message };
+      }
+    });
+
+    ipcMain.handle('search-suggestions', async (event, partial) => {
+      try {
+        const { SmartSearch } = require('./core/index/search');
+        const search = new SmartSearch();
+        const suggestions = await search.getSearchSuggestions(partial);
+        await search.close();
+        return suggestions;
+      } catch (error) {
+        console.error('Failed to get search suggestions:', error);
+        return [];
+      }
+    });
+
+    ipcMain.handle('search-open-file', async (event, filePath) => {
+      try {
+        await shell.openPath(filePath);
+        return { success: true };
+      } catch (error) {
+        console.error('Failed to open file:', error);
+        return { success: false, message: error.message };
+      }
+    });
+
+    ipcMain.handle('search-show-in-finder', async (event, filePath) => {
+      try {
+        shell.showItemInFolder(filePath);
+        return { success: true };
+      } catch (error) {
+        console.error('Failed to show in finder:', error);
+        return { success: false, message: error.message };
+      }
+    });
+
+    ipcMain.handle('search-index-all', async () => {
+      try {
+        const { SmartSearch } = require('./core/index/search');
+        const search = new SmartSearch();
+        const count = await search.indexAllOrganizedFiles();
+        await search.close();
+        return { success: true, indexedCount: count };
+      } catch (error) {
+        console.error('Failed to index files:', error);
+        return { success: false, message: error.message };
+      }
+    });
+
+    ipcMain.handle('search-clear-index', async () => {
+      try {
+        const { SmartSearch } = require('./core/index/search');
+        const search = new SmartSearch();
+        await search.clearIndex();
+        await search.close();
+        return { success: true };
+      } catch (error) {
+        console.error('Failed to clear search index:', error);
+        return { success: false, message: error.message };
+      }
+    });
+
+    // Preview and approve workflow handlers
+    ipcMain.handle('analyze-desktop', async () => {
+      try {
+        const { DesktopOrganizer } = require('./core/organize/organizer');
+        const organizer = new DesktopOrganizer();
+        
+        // Get files from desktop
+        const files = await organizer.getDesktopFiles();
+        
+        // Categorize files
+        const categories = {};
+        const folderNames = {};
+        
+        for (const file of files) {
+          const category = organizer.determineCategory(file);
+          if (!category) continue; // Skip files without category
+          
+          if (!categories[category]) {
+            categories[category] = [];
+          }
+          categories[category].push({
+            name: file.name,
+            path: file.path,
+            type: file.ext || 'file'
+          });
+          
+          // Generate default folder names
+          if (!folderNames[category]) {
+            folderNames[category] = this.generateFolderName(category);
+          }
+        }
+        
+        return {
+          categories,
+          folderNames,
+          totalFiles: files.length
+        };
+      } catch (error) {
+        console.error('Failed to analyze desktop:', error);
+        throw new Error('Failed to analyze desktop files');
+      }
+    });
+
+    ipcMain.handle('execute-organization', async (event, analysisResult) => {
+      try {
+        const { DesktopOrganizer } = require('./core/organize/organizer');
+        const organizer = new DesktopOrganizer();
+        
+        // Execute organization with user-approved folder names
+        const result = await organizer.organizeWithCustomNames(analysisResult);
+        return result;
+      } catch (error) {
+        console.error('Failed to execute organization:', error);
+        throw new Error('Failed to organize desktop files');
+      }
+    });
   }
 
   showAbout() {
@@ -461,23 +761,22 @@ class TidyTop {
         </style>
     </head>
     <body>
-        <div class="logo">🧹</div>
+        <div class="logo"></div>
         <div class="title">TidyTop</div>
         <div class="version">Version 1.0.0</div>
-        <div class="description">A playful yet powerful desktop cleaning assistant that makes organization delightful!</div>
+        <div class="description">Your desktop is a hot mess. We're here to fix that without you having to think about it.</div>
         
         <div class="features">
-            <div class="feature">🧹 One-click desktop organization</div>
-            <div class="feature">📸 Smart screenshot handling</div>
-            <div class="feature">✨ Auto-clean file watching</div>
-            <div class="feature">🕒 Recent files (72h) access</div>
-            <div class="feature">↩️ Complete undo system</div>
-            <div class="feature">⚙️ Customizable settings</div>
+            <div class="feature">- One-click desktop organization</div>
+            <div class="feature">- Smart screenshot handling</div>
+            <div class="feature">- Auto-clean file watching</div>
+            <div class="feature">- Recent files (72h) access</div>
+            <div class="feature">- Complete undo system</div>
+            <div class="feature">- Customizable settings</div>
         </div>
         
         <div class="footer">
-            Desktop organization made delightful! ✨<br>
-            Built with Electron & Node.js
+            Because life's too short to spend it looking for files.
         </div>
     </body>
     </html>`;
