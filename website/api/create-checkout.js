@@ -22,13 +22,6 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Price ID is required' });
     }
 
-    // Debug: Check if Stripe key is available
-    if (!process.env.STRIPE_SECRET_KEY) {
-      return res.status(500).json({ 
-        error: 'Stripe secret key not configured',
-        debug: 'Environment variable STRIPE_SECRET_KEY is missing'
-      });
-    }
 
     // Get the domain for redirect URLs
     const domain = req.headers.origin || 'https://tidytop.app';
@@ -75,7 +68,9 @@ export default async function handler(req, res) {
     
     res.status(500).json({ 
       error: 'Failed to create checkout session',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      details: error.message,
+      code: error.code,
+      type: error.type
     });
   }
 }
