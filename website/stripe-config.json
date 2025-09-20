@@ -1,65 +1,65 @@
 {
-  "created": "2025-09-20T17:32:21.102Z",
+  "created": "2025-09-20T21:37:22.175Z",
   "stripeMode": "live",
   "products": {
     "Coffee": {
-      "productId": "prod_T5fzw3UvH16Qid",
-      "priceId": "price_1S9UdwEGdIa285lesYwkvoQD",
+      "productId": "prod_T5jweyJFSO075J",
+      "priceId": "price_1S9YT3EGdIa285leR2JSWDPn",
       "price": 3.47
     },
     "Red Bull": {
-      "productId": "prod_T5fzKxQlLPe9UX",
-      "priceId": "price_1S9UdxEGdIa285leEJvnHTWI",
+      "productId": "prod_T5jwNFOw1KtUul",
+      "priceId": "price_1S9YT4EGdIa285leDkuJwz9f",
       "price": 2.89
     },
     "Water": {
-      "productId": "prod_T5fzCnmSo50ZDA",
-      "priceId": "price_1S9UdxEGdIa285le7o4uMaZc",
+      "productId": "prod_T5jwflqjZcdHLj",
+      "priceId": "price_1S9YT4EGdIa285led9AlQtmL",
       "price": 1.25
     },
     "Milk": {
-      "productId": "prod_T5fzeLNZ6dgrP8",
-      "priceId": "price_1S9UdxEGdIa285leyB52RQMf",
+      "productId": "prod_T5jwhVxXwkeKMg",
+      "priceId": "price_1S9YT5EGdIa285leDCp7N43F",
       "price": 2.15
     },
     "Coca-Cola": {
-      "productId": "prod_T5fzmCdvppAmIY",
-      "priceId": "price_1S9UdyEGdIa285leXQRqybs9",
+      "productId": "prod_T5jwF5b9rBLBA1",
+      "priceId": "price_1S9YT5EGdIa285leyE8rOuaQ",
       "price": 1.99
     },
     "Heineken Zero": {
-      "productId": "prod_T5fzylDBJ8uruA",
-      "priceId": "price_1S9UdyEGdIa285lelJLdRHXi",
+      "productId": "prod_T5jwJiRATqodmn",
+      "priceId": "price_1S9YT5EGdIa285lePJ7GbDQg",
       "price": 4.5
     },
     "Orange Juice": {
-      "productId": "prod_T5fzNIK5ARKvAQ",
-      "priceId": "price_1S9UdzEGdIa285leXgDGguBD",
+      "productId": "prod_T5jwMpe6kmWl5K",
+      "priceId": "price_1S9YT6EGdIa285lemQakyeJg",
       "price": 2.85
     },
     "Green Tea": {
-      "productId": "prod_T5fzvTwCY9wh7s",
-      "priceId": "price_1S9UdzEGdIa285leyF4CyGQG",
+      "productId": "prod_T5jxCl5VfRhNMP",
+      "priceId": "price_1S9YT6EGdIa285leGYU8TEQQ",
       "price": 2.1
     },
     "Whiskey": {
-      "productId": "prod_T5fzzBR3ShBzkn",
-      "priceId": "price_1S9UdzEGdIa285letGCJ89py",
+      "productId": "prod_T5jx2E1TEag09X",
+      "priceId": "price_1S9YT6EGdIa285leUduEgSSV",
       "price": 8
     },
     "Wine": {
-      "productId": "prod_T5g0NwmJ0rQ6py",
-      "priceId": "price_1S9Ue0EGdIa285leHq7n5xuv",
+      "productId": "prod_T5jxrDV9WfVe8b",
+      "priceId": "price_1S9YT7EGdIa285letsn1nmZM",
       "price": 7.5
     },
     "Topo Chico": {
-      "productId": "prod_T5g0UF4aBFzNEp",
-      "priceId": "price_1S9Ue0EGdIa285leCqwJRxf0",
+      "productId": "prod_T5jxzt8H7kTyxr",
+      "priceId": "price_1S9YT7EGdIa285le1koIveAq",
       "price": 3.2
     },
     "Coconut Water": {
-      "productId": "prod_T5g0kVfvoF2DzB",
-      "priceId": "price_1S9Ue0EGdIa285leJnmyB5Az",
+      "productId": "prod_T5jxfuf6Oug5K0",
+      "priceId": "price_1S9YT8EGdIa285lesn3MfBtq",
       "price": 3.75
     }
   }
