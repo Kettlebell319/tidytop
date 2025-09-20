@@ -555,6 +555,7 @@
         async function selectDrink(drinkName) {
             const drink = drinkData[drinkName];
             const macArch = detectMacArchitecture();
+            const downloadUrl = getDownloadUrl(macArch);
             
             if (!drink) {
                 console.error('Drink not found:', drinkName);
@@ -564,26 +565,20 @@
             try {
                 console.log('Initiating purchase for:', drinkName, 'Price ID:', drink.priceId);
                 
-                // Call our serverless function to create checkout session
-                const response = await fetch('/api/create-checkout', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        priceId: drink.priceId,
-                        drinkName: drinkName,
-                        macArchitecture: macArch
-                    })
+                // Create Stripe checkout session directly with Stripe.js
+                const { error } = await stripe.redirectToCheckout({
+                    lineItems: [{
+                        price: drink.priceId,
+                        quantity: 1,
+                    }],
+                    mode: 'payment',
+                    successUrl: window.location.origin + `/success.html?download=${encodeURIComponent(downloadUrl)}&drink=${encodeURIComponent(drinkName)}`,
+                    cancelUrl: window.location.origin + '/cancel.html',
+                    clientReferenceId: macArch,
                 });
 
-                const data = await response.json();
-                
-                if (data.url) {
-                    // Redirect to Stripe checkout
-                    window.location.href = data.url;
-                } else {
-                    console.error('No checkout URL received:', data);
+                if (error) {
+                    console.error('Stripe error:', error);
                     alert('Payment processing unavailable. Please try again later.');
                 }
             } catch (err) {
