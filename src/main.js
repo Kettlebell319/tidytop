@@ -41,72 +41,32 @@ class TidyTop {
   }
 
   createTray() {
-    // Create tray icon - try custom icon first, fallback to system icon
+    console.log('Creating tray icon...');
+    
+    // Try different system icons for better menu bar appearance
     let icon;
     try {
-      // Try to load the proper 16x16 tray icon
-      if (process.platform === 'darwin') {
-        // On macOS, use Template icon for automatic dark/light mode adaptation
-        const templatePath = path.join(__dirname, '../assets/icons/tray-16x16Template.png');
-        icon = nativeImage.createFromPath(templatePath);
-        
-        if (icon.isEmpty()) {
-          // Fallback to regular icon
-          const iconPath = path.join(__dirname, '../assets/icons/tray-16x16.png');
-          icon = nativeImage.createFromPath(iconPath);
-        }
-        
-        // Mark as template for macOS theme adaptation
-        if (!icon.isEmpty()) {
-          icon.setTemplateImage(true);
-        }
-      } else {
-        // For Windows/Linux, use regular icon
-        const iconPath = path.join(__dirname, '../assets/icons/tray-16x16.png');
-        icon = nativeImage.createFromPath(iconPath);
-      }
-      
-      // If all custom icons failed, use system fallback
+      // Try using a cleaning/organization themed icon
+      icon = nativeImage.createFromNamedImage('NSImageNameTrashFull', [16, 16]);
       if (icon.isEmpty()) {
-        throw new Error('Custom tray icons not found');
-      }
-      
-    } catch (error) {
-      console.log('Using system fallback icon:', error.message);
-      
-      // Platform-specific system fallbacks
-      if (process.platform === 'darwin') {
-        // Use a simple, small folder icon on macOS - much smaller and cleaner
+        // Fallback to folder icon
         icon = nativeImage.createFromNamedImage('NSImageNameFolder', [16, 16]);
-        
-        // Make it even smaller for menu bar
-        icon = icon.resize({ width: 14, height: 14 });
-        icon.setTemplateImage(true);
-      } else if (process.platform === 'win32') {
-        // Create a simple geometric icon for Windows
-        icon = nativeImage.createFromDataURL('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAAdgAAAHYBTnsmCAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAE4SURBVDiNpZMxSwJxFIe/ryYRDpewobGhqaGloaWloam1oaGltaWltaGloaGloaGloaWhoaGloaGloaGloaGloaGloaGlpaGloaGloaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGh');
-      } else {
-        // Linux fallback
-        icon = nativeImage.createFromDataURL('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAAdgAAAHYBTnsmCAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAE4SURBVDiNpZMxSwJxFIe/ryYRDpewobGhqaGloaWloam1oaGltaWltaGloaGloaGloaWhoaGloaGloaGloaGloaGloaGlpaGloaGloaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGhpaGlpaGloaGh');
       }
+      if (icon.isEmpty()) {
+        // Final fallback to a simple icon
+        icon = nativeImage.createFromNamedImage('NSImageNameApplicationIcon', [16, 16]);
+      }
+    } catch (error) {
+      // Create a simple folder icon as ultimate fallback
+      icon = nativeImage.createFromNamedImage('NSImageNameFolder', [16, 16]);
     }
+    
+    icon.setTemplateImage(true);
     
     this.tray = new Tray(icon);
     this.tray.setToolTip('TidyTop - Desktop Organizer');
     
-    // Add click handlers for better UX
-    this.tray.on('click', () => {
-      console.log('Tray clicked - showing menu');
-      // On some platforms, left-click doesn't automatically show context menu
-      if (process.platform !== 'darwin') {
-        this.tray.popUpContextMenu();
-      }
-    });
-    
-    this.tray.on('right-click', () => {
-      console.log('Tray right-clicked');
-      this.tray.popUpContextMenu();
-    });
+    console.log('Tray icon created successfully');
   }
 
   setupMenu() {
@@ -486,95 +446,6 @@ class TidyTop {
         return false;
       }
     });
-
-    // Design Mode IPC handlers (disabled for v1.0)
-    /*
-    ipcMain.handle('design-get-stats', async () => {
-      try {
-        const { DesktopDesigner } = require('./core/design/designer');
-        const designer = new DesktopDesigner();
-        return await designer.getDesignStats();
-      } catch (error) {
-        console.error('Failed to get design stats:', error);
-        return { success: false, message: error.message };
-      }
-    });
-
-    ipcMain.handle('design-preview', async (event, layoutType) => {
-      try {
-        const { DesktopDesigner } = require('./core/design/designer');
-        const designer = new DesktopDesigner();
-        return await designer.previewDesign(layoutType);
-      } catch (error) {
-        console.error('Failed to preview design:', error);
-        return { success: false, message: error.message };
-      }
-    });
-
-    ipcMain.handle('design-create', async (event, layoutType, options) => {
-      try {
-        const { DesktopDesigner } = require('./core/design/designer');
-        const designer = new DesktopDesigner();
-        const result = await designer.createDesign(layoutType, options);
-        
-        // Show success notification in tray
-        this.tray.displayBalloon({
-          title: 'TidyTop Design Mode',
-          content: result.message
-        });
-        
-        return result;
-      } catch (error) {
-        console.error('Failed to create design:', error);
-        
-        // Show error notification
-        this.tray.displayBalloon({
-          title: 'TidyTop Design Error',
-          content: `Failed to create ${layoutType} layout: ${error.message}`
-        });
-        
-        return { success: false, message: error.message };
-      }
-    });
-
-    // Check if design mode is active
-    ipcMain.handle('design-is-active', async () => {
-      try {
-        const { DesktopDesigner } = require('./core/design/designer');
-        const designer = new DesktopDesigner();
-        return await designer.isDesignModeActive();
-      } catch (error) {
-        console.error('Failed to check design mode status:', error);
-        return false;
-      }
-    });
-
-    // Exit design mode
-    ipcMain.handle('design-exit', async () => {
-      try {
-        const { DesktopDesigner } = require('./core/design/designer');
-        const designer = new DesktopDesigner();
-        const result = await designer.exitDesignMode();
-        
-        // Show notification
-        this.tray.displayBalloon({
-          title: result.success ? 'Design Mode Exited' : 'Exit Failed',
-          content: result.message
-        });
-        
-        return result;
-      } catch (error) {
-        console.error('Failed to exit design mode:', error);
-        
-        this.tray.displayBalloon({
-          title: 'TidyTop Error',
-          content: `Failed to exit design mode: ${error.message}`
-        });
-        
-        return { success: false, message: error.message };
-      }
-    });
-    */
 
     // Smart Find IPC handlers
     ipcMain.handle('search-get-stats', async () => {
