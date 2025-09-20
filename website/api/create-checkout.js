@@ -1,6 +1,7 @@
 // Vercel serverless function for creating Stripe checkout sessions
-// Updated for live payments
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: '2024-06-20',
+});
 
 export default async function handler(req, res) {
   // Enable CORS for frontend requests
@@ -32,7 +33,7 @@ export default async function handler(req, res) {
       ? 'https://github.com/Kettlebell319/tidytop/releases/download/v1.0.0/TidyTop-1.0.0-arm64.dmg'
       : 'https://github.com/Kettlebell319/tidytop/releases/download/v1.0.0/TidyTop-1.0.0.dmg';
 
-    // Create Stripe checkout session with minimal config
+    // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
@@ -44,6 +45,8 @@ export default async function handler(req, res) {
       mode: 'payment',
       success_url: `${domain}/success.html?download=${encodeURIComponent(downloadUrl)}&drink=${encodeURIComponent(drinkName)}`,
       cancel_url: `${domain}/cancel.html`,
+      client_reference_id: macArchitecture,
+      customer_creation: 'always',
     });
 
     res.status(200).json({ 
