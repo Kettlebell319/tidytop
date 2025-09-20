@@ -1,0 +1,66 @@
+{
+  "created": "2025-09-20T17:32:21.102Z",
+  "stripeMode": "live",
+  "products": {
+    "Coffee": {
+      "productId": "prod_T5fzw3UvH16Qid",
+      "priceId": "price_1S9UdwEGdIa285lesYwkvoQD",
+      "price": 3.47
+    },
+    "Red Bull": {
+      "productId": "prod_T5fzKxQlLPe9UX",
+      "priceId": "price_1S9UdxEGdIa285leEJvnHTWI",
+      "price": 2.89
+    },
+    "Water": {
+      "productId": "prod_T5fzCnmSo50ZDA",
+      "priceId": "price_1S9UdxEGdIa285le7o4uMaZc",
+      "price": 1.25
+    },
+    "Milk": {
+      "productId": "prod_T5fzeLNZ6dgrP8",
+      "priceId": "price_1S9UdxEGdIa285leyB52RQMf",
+      "price": 2.15
+    },
+    "Coca-Cola": {
+      "productId": "prod_T5fzmCdvppAmIY",
+      "priceId": "price_1S9UdyEGdIa285leXQRqybs9",
+      "price": 1.99
+    },
+    "Heineken Zero": {
+      "productId": "prod_T5fzylDBJ8uruA",
+      "priceId": "price_1S9UdyEGdIa285lelJLdRHXi",
+      "price": 4.5
+    },
+    "Orange Juice": {
+      "productId": "prod_T5fzNIK5ARKvAQ",
+      "priceId": "price_1S9UdzEGdIa285leXgDGguBD",
+      "price": 2.85
+    },
+    "Green Tea": {
+      "productId": "prod_T5fzvTwCY9wh7s",
+      "priceId": "price_1S9UdzEGdIa285leyF4CyGQG",
+      "price": 2.1
+    },
+    "Whiskey": {
+      "productId": "prod_T5fzzBR3ShBzkn",
+      "priceId": "price_1S9UdzEGdIa285letGCJ89py",
+      "price": 8
+    },
+    "Wine": {
+      "productId": "prod_T5g0NwmJ0rQ6py",
+      "priceId": "price_1S9Ue0EGdIa285leHq7n5xuv",
+      "price": 7.5
+    },
+    "Topo Chico": {
+      "productId": "prod_T5g0UF4aBFzNEp",
+      "priceId": "price_1S9Ue0EGdIa285leCqwJRxf0",
+      "price": 3.2
+    },
+    "Coconut Water": {
+      "productId": "prod_T5g0kVfvoF2DzB",
+      "priceId": "price_1S9Ue0EGdIa285leJnmyB5Az",
+      "price": 3.75
+    }
+  }
+}

@@ -506,14 +506,100 @@
         </div>
     </div>
 
+    <!-- Stripe.js -->
+    <script src="https://js.stripe.com/v3/"></script>
+    
     <script>
+        // Stripe configuration (use test key for now)
+        const stripe = Stripe('pk_live_51I3VRxEGdIa285leL4WzHENrvZLuQEb5nLUqIJbIgpM6nOZC3eTQ3MXiN68qiMjwl30YpzUILXLpBF7TggbSBk6w00V7Fke9HG');
+        
+        // Live Stripe price IDs for drink-based pricing
+        const drinkData = {
+            'Coffee': { price: 3.47, priceId: 'price_1S9UdwEGdIa285lesYwkvoQD', trend: '+1.2%' },
+            'Red Bull': { price: 2.89, priceId: 'price_1S9UdxEGdIa285leEJvnHTWI', trend: '-0.8%' },
+            'Water': { price: 1.25, priceId: 'price_1S9UdxEGdIa285le7o4uMaZc', trend: '+0.3%' },
+            'Milk': { price: 2.15, priceId: 'price_1S9UdxEGdIa285leyB52RQMf', trend: '+2.1%' },
+            'Coca-Cola': { price: 1.99, priceId: 'price_1S9UdyEGdIa285leXQRqybs9', trend: '-0.5%' },
+            'Heineken Zero': { price: 4.50, priceId: 'price_1S9UdyEGdIa285lelJLdRHXi', trend: '+1.8%' },
+            'Orange Juice': { price: 2.85, priceId: 'price_1S9UdzEGdIa285leXgDGguBD', trend: '+0.9%' },
+            'Green Tea': { price: 2.10, priceId: 'price_1S9UdzEGdIa285leyF4CyGQG', trend: '-0.2%' },
+            'Whiskey': { price: 8.00, priceId: 'price_1S9UdzEGdIa285letGCJ89py', trend: '+3.2%' },
+            'Wine': { price: 7.50, priceId: 'price_1S9Ue0EGdIa285leHq7n5xuv', trend: '+2.8%' },
+            'Topo Chico': { price: 3.20, priceId: 'price_1S9Ue0EGdIa285leCqwJRxf0', trend: '+1.5%' },
+            'Coconut Water': { price: 3.75, priceId: 'price_1S9Ue0EGdIa285leJnmyB5Az', trend: '+0.7%' }
+        };
+
+        // Detect Mac architecture
+        function detectMacArchitecture() {
+            const userAgent = navigator.userAgent;
+            const platform = navigator.platform;
+            
+            // Check if it's a Mac
+            if (platform.includes('Mac')) {
+                // Try to detect Apple Silicon vs Intel
+                // This is approximate - Apple Silicon detection is complex
+                if (userAgent.includes('Intel')) {
+                    return 'intel';
+                } else if (platform.includes('arm') || platform.includes('ARM')) {
+                    return 'apple-silicon';
+                } else {
+                    // Default to Intel for older detection methods
+                    return 'intel';
+                }
+            }
+            return 'unknown';
+        }
+
+        // Get appropriate download URL based on Mac type
+        function getDownloadUrl(architecture) {
+            // Temporary URLs - will update with proper hosting
+            const baseUrl = 'https://github.com/Kettlebell319/tidytop/releases/download/v1.0.0/';
+            
+            if (architecture === 'apple-silicon') {
+                return baseUrl + 'TidyTop-1.0.0-arm64.dmg';
+            } else {
+                return baseUrl + 'TidyTop-1.0.0.dmg'; // Intel or unknown defaults to Intel
+            }
+        }
+
         function scrollToPricing() {
             document.getElementById('pricing').scrollIntoView({ behavior: 'smooth' });
         }
 
-        function selectDrink(drink) {
-            document.getElementById('selected-drink').textContent = drink;
-            document.getElementById('modal').classList.remove('hidden');
+        async function selectDrink(drinkName) {
+            const drink = drinkData[drinkName];
+            const macArch = detectMacArchitecture();
+            const downloadUrl = getDownloadUrl(macArch);
+            
+            if (!drink) {
+                console.error('Drink not found:', drinkName);
+                return;
+            }
+
+            try {
+                // Create Stripe checkout session
+                const { error } = await stripe.redirectToCheckout({
+                    lineItems: [{
+                        price: drink.priceId,
+                        quantity: 1,
+                    }],
+                    mode: 'payment',
+                    successUrl: window.location.origin + `/success.html?download=${encodeURIComponent(downloadUrl)}&drink=${encodeURIComponent(drinkName)}`,
+                    cancelUrl: window.location.origin + '/cancel.html',
+                    clientReferenceId: macArch, // Track Mac architecture for analytics
+                });
+
+                if (error) {
+                    console.error('Stripe error:', error);
+                    // Fallback: show modal with error message
+                    alert('Payment processing unavailable. Please try again later.');
+                }
+            } catch (err) {
+                console.error('Payment initiation failed:', err);
+                // Fallback: show original modal for now
+                document.getElementById('selected-drink').textContent = drinkName;
+                document.getElementById('modal').classList.remove('hidden');
+            }
         }
 
         function closeModal() {
@@ -525,6 +611,22 @@
             if (event.key === 'Escape') {
                 closeModal();
             }
+        });
+
+        // Initialize price updates (placeholder for Phase 2)
+        function initializePriceUpdates() {
+            // TODO: Phase 2 - Replace static prices with dynamic fetching
+            console.log('Price updates initialized');
+        }
+
+        // Load dynamic prices on page load (Phase 2)
+        document.addEventListener('DOMContentLoaded', function() {
+            initializePriceUpdates();
+            
+            // Display detected Mac architecture for debugging
+            const macArch = detectMacArchitecture();
+            console.log('Detected Mac architecture:', macArch);
+            console.log('Download URL would be:', getDownloadUrl(macArch));
         });
     </script>
 </body>

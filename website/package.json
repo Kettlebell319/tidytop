@@ -1,0 +1,20 @@
+{
+  "name": "tidytop-landing",
+  "version": "1.0.0",
+  "description": "TidyTop landing page with payment integration",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'Static site - no build needed'",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "stripe": "^14.11.0"
+  },
+  "devDependencies": {
+    "@vercel/node": "^3.0.0"
+  },
+  "engines": {
+    "node": "22.x"
+  }
+}
