@@ -32,8 +32,9 @@ export default async function handler(req, res) {
       ? 'https://github.com/Kettlebell319/tidytop/releases/download/v1.0.0/TidyTop-1.0.0-arm64.dmg'
       : 'https://github.com/Kettlebell319/tidytop/releases/download/v1.0.0/TidyTop-1.0.0.dmg';
 
-    // Create Stripe checkout session
+    // Create Stripe checkout session with minimal config
     const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
       line_items: [
         {
           price: priceId,
@@ -43,20 +44,6 @@ export default async function handler(req, res) {
       mode: 'payment',
       success_url: `${domain}/success.html?download=${encodeURIComponent(downloadUrl)}&drink=${encodeURIComponent(drinkName)}`,
       cancel_url: `${domain}/cancel.html`,
-      client_reference_id: macArchitecture,
-      metadata: {
-        drink_name: drinkName,
-        mac_architecture: macArchitecture,
-        download_url: downloadUrl,
-      },
-      // Optional: Collect customer email for updates
-      customer_creation: 'always',
-      // Optional: Add custom branding
-      custom_text: {
-        submit: {
-          message: 'Your desktop organization journey starts here!'
-        }
-      }
     });
 
     res.status(200).json({ 
